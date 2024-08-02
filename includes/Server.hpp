@@ -11,12 +11,27 @@
 /* ************************************************************************** */
 
 #include <iostream>
+#include <string>
+#include <vector>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/select.h>
+#include <stdlib.h>
+#include <poll.h>
 
 class Server
 {
-	private:
-		Server();
-		~Server();
-	public:
+public:
+	Server(int port, const std::string& password);
+	~Server();
+	void run();
+
+private:
+	int _port;
+	std::string _password;
+	int _server_fd; // server file descriptor
+	int _client_fd; // client file descriptor
 
 };

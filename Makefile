@@ -12,7 +12,7 @@
 
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++98
-SRC = srcs/main.cpp
+SRC = srcs/main.cpp srcs/Server.cpp
 OBJ = $(SRC:.cpp=.o)
 TARGET = ircserv
 
