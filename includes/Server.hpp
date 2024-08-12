@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ttavares <ttavares@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/01 16:29:17 by ttavares          #+#    #+#             */
-/*   Updated: 2024/08/01 16:29:17 by ttavares         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -23,15 +11,15 @@
 
 class Server
 {
-public:
-	Server(int port, const std::string& password);
-	~Server();
-	void run();
-
-private:
-	int _port;
-	std::string _password;
-	int _server_fd; // server file descriptor
-	int _client_fd; // client file descriptor
-
+	public:
+		Server(int port, const std::string &password);
+		~Server();
+		void run();
+	private:
+		int _port;
+		std::string _password;
+		int _server_fd;
+		sockaddr_in _serverAddress; //server_adress
+		std::vector<struct pollfd> _pollfds; // stores pollfd structs representing a fd to monitor
+		void start();
 };
