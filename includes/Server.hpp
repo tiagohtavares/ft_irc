@@ -8,6 +8,7 @@
 #include <sys/select.h>
 #include <stdlib.h>
 #include <poll.h>
+#include <map>
 
 class Server
 {
@@ -21,5 +22,6 @@ class Server
 		int _server_fd;
 		sockaddr_in _serverAddress; //server_adress
 		std::vector<struct pollfd> _pollfds; // stores pollfd structs representing a fd to monitor
+		std::map<int, bool> _authenticatedClients;
 		void start();
 };

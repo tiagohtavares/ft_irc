@@ -63,6 +63,15 @@ void Server::run()
 			clientPollFd.revents = 0;
 			_pollfds.push_back(clientPollFd);
 
+			_authenticatedClients[clientFd] = false;
+
+			// Send a password prompt to the client
+			const std::string passwordPrompt = "Please enter the password:\n";
+			send(clientFd, passwordPrompt.c_str(), passwordPrompt.size(), 0);
+
+
+
+
 			std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl << std::flush;
 		}
 
@@ -91,23 +100,46 @@ void Server::run()
 				{
 					std::string receivedMessage(buffer, bytesReceived);
 					receivedMessage.erase(receivedMessage.find_last_not_of("\r\n") + 1);
-					std::cout << "Message from client: " << receivedMessage << std::endl << std::flush;
 
-					//Testing
-					// if (receivedMessage == "close")
-					// {
-					// 	std::cout << "Received close message. Shutting down client." << std::endl << std::flush;
-					// 	close(_pollfds[i].fd);
-					// 	_pollfds.erase(_pollfds.begin() + i);
-					// 	--i; // Adjust index after removal
-					// 	break; // Exit the for loop to process remaining clients
-					// }
-					// if (receivedMessage == "shutdown")
-					// {
-					// 	std::cout << "Received close message. Shutting down server." << std::endl << std::flush;
-					// 	running = false;
-					// 	break; // Exit the for loop to process remaining clients
-					// }
+					if (!_authenticatedClients[_pollfds[i].fd])
+					{
+						// Client has not been authenticated, check the password
+						if (receivedMessage == _password)
+						{
+							_authenticatedClients[_pollfds[i].fd] = true;
+							const std::string welcomeMessage = "Password accepted. You are now connected.\n";
+							send(_pollfds[i].fd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
+							std::cout << "Client authenticated." << std::endl << std::flush;
+						}
+						else
+						{
+							const std::string errorMessage = "Invalid password. Connection will be closed.\n";
+							send(_pollfds[i].fd, errorMessage.c_str(), errorMessage.size(), 0);
+							close(_pollfds[i].fd);
+							_authenticatedClients.erase(_pollfds[i].fd);
+							_pollfds.erase(_pollfds.begin() + i);
+							--i; // Adjust index after removal
+						}
+					}
+					else
+					{
+						std::cout << "Message from client: " << receivedMessage << std::endl << std::flush;
+						//Testing
+						if (receivedMessage == "close")
+						{
+							std::cout << "Received close message. Shutting down client." << std::endl << std::flush;
+							close(_pollfds[i].fd);
+							_pollfds.erase(_pollfds.begin() + i);
+							--i; // Adjust index after removal
+							break; // Exit the for loop to process remaining clients
+						}
+						if (receivedMessage == "shutdown")
+						{
+							std::cout << "Received close message. Shutting down server." << std::endl << std::flush;
+							running = false;
+							break; // Exit the for loop to process remaining clients
+						}
+					}
 				}
 			}
 		}
