@@ -104,6 +104,7 @@ void Server::run()
 				{
 					std::string receivedMessage(buffer, bytesReceived);
 					receivedMessage.erase(receivedMessage.find_last_not_of("\r\n") + 1);
+					std::cout << "Received message " << receivedMessage << std::endl;
 					processClientMessage(_pollfds[i].fd, receivedMessage);
 				}
 			}
@@ -147,9 +148,9 @@ void Server::handleNewConnection()
 	_mapClients[clientFd] = client;
 	_authenticatedClients[clientFd] = false;
 
-	// Send a password prompt to the client
-	const std::string passwordPrompt = "Please enter the password:\n";
-	send(client.getClientFd(), passwordPrompt.c_str(), passwordPrompt.size(), 0);
+	// // Send a password prompt to the client
+	// const std::string passwordPrompt = "Please enter the password:\n";
+	// send(client.getClientFd(), passwordPrompt.c_str(), passwordPrompt.size(), 0);
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
 }
@@ -207,85 +208,137 @@ void Server::processClientMessage(int clientFd, const std::string &receivedMessa
 	Client &client = _mapClients[clientFd];
 
 	splitCmdLine(receivedMessage);
-	std::cout << "Command: " << _cmd << std::endl;
+	// if (!_cmd.empty())
+	// 	std::cout << "Command: " << _cmd << std::endl;
+	// if (!_params.empty())
+	// 	std::cout << "Params:  " << _params.top() << std::endl;
 
 	if (!_cmd.empty())
 	{
-		if (_cmd == "PASS")
+		if(!_authenticatedClients[clientFd])
 		{
-			std::cout << "Received password: " << _params.top() << std::endl;
-			std::cout << "Params size: " << _params.size() << std::endl;
-			if (_params.size() == 1)
+			// Temos de tratar a situacao de CAP mais a frente
+			// std::cout << "Client " << clientFd <<  "not auth" << std::endl;
+			if (_cmd == "CAP")
 			{
-				if (_params.top() == _password)
+				return;
+			}
+			else if (_cmd == "PASS")
+			{
+				std::cout << "Received password: " << _params.top() << std::endl;
+				std::cout << "Params size: " << _params.size() << std::endl;
+				if (_params.size() == 1)
 				{
-					_authenticatedClients[clientFd] = true;
-					const std::string welcomeMessage = "Password accepted. You are now connected.\n";
-					send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
-					std::cout << "Client authenticated." << std::endl;
+					if (_params.top() == _password)
+					{
+						_authenticatedClients[clientFd] = true;
+						const std::string welcomeMessage = "Password accepted. You are now connected.\n";
+						send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
+						std::cout << "Client authenticated." << std::endl;
+						// _params.pop();
+					}
+					else
+					{
+						const std::string errorMessage = "Invalid password. Connection will be closed.\n";
+						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+						cleanupClient(clientFd);
+						// _params.pop();
+					}
+				}
+			}
+			else
+			{
+				const std::string errorMessage = "Invalid command. Connection will be closed.\n";
+				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+				cleanupClient(clientFd);
+			}
+		}
+		if(_authenticatedClients[clientFd])
+		{
+			if (_cmd == "NICK")
+			{
+				if (_params.size() != 0 && client.getNickName().empty())
+				{
+					client.setNickName(_params.top());
+					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
+					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
 					// _params.pop();
 				}
 				else
 				{
-					const std::string errorMessage = "Invalid password. Connection will be closed.\n";
+					const std::string errorMessage = "Invalid nickname. Connection will be closed.\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					cleanupClient(clientFd);
-					// _params.pop();
 				}
 			}
+			else if (_cmd == "SET")
+			{
+				if (_params.size() != 2)
+				{
+					client.setNickName(_params.top());
+					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
+					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
+					// _params.pop();
+				}
+				else
+				{
+					const std::string errorMessage = "Invalid parameters. Connection will be closed.\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					cleanupClient(clientFd);
+				}
+			}
+
+			//TESTING
+			else if (_cmd == "PRIVMSG")
+			{
+				if (_params.size() < 2)
+				{
+					const std::string errorMessage = "Usage: PRIVMSG <nickname> <message>\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+				}
+				else
+				{
+					std::string message = _params.top();  // Get the actual message
+					std::cout << "message: " << message << std::endl;
+					_params.pop();
+					std::string recipientNick = _params.top();  // Get recipient's nickname
+					std::cout << "recipient nick: " << recipientNick << std::endl;
+					_params.pop();
+
+					std::string senderNick = _mapClients[clientFd].getNickName();
+					std::string formattedMessage = senderNick + ": " + message + "\n";
+
+					for (std::map<int, Client>::iterator it = _mapClients.begin(); it != _mapClients.end(); ++it)
+					{
+						// Access the Client object using it->second
+						if (it->second.getNickName() == recipientNick)
+						{
+							// Client with the desired nickname found
+							std::cout << "Client with nickname " << recipientNick << " found. Client FD: " << it->first << std::endl;
+							send(it->first, formattedMessage.c_str(), formattedMessage.size(), 0);
+							break;  // Exit loop once the client is found
+						}
+					}
+				}
+			}
+
+
+
+			else if (_cmd.empty() && _params.empty())
+			{
+				return ;
+			}
 			else
 			{
-				const std::string errorMessage = "Invalid password. Connection will be closed.\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				cleanupClient(clientFd);
-			}
-		}
-		else if (_cmd == "NICK" && _authenticatedClients[clientFd])
-		{
-			if (_params.size() != 0 && client.getNickName().empty())
-			{
-				client.setNickName(_params.top());
-				const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
-				send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-				// _params.pop();
-			}
-			else
-			{
-				const std::string errorMessage = "Invalid nickname. Connection will be closed.\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				cleanupClient(clientFd);
-			}
-		}
-		else if (_cmd == "SET" && _authenticatedClients[clientFd])
-		{
-			if (_params.size() != 2)
-			{
-				client.setNickName(_params.top());
-				const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
-				send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-				// _params.pop();
-			}
-			else
-			{
-				const std::string errorMessage = "Invalid parameters. Connection will be closed.\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				cleanupClient(clientFd);
-			}
-		}
-		else if (_cmd.empty() && _params.empty())
-		{
-			return ;
-		}
-		else
-		{
-			std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
-			if (receivedMessage == "close") {
-				std::cout << "Received close message. Shutting down client." << std::endl;
-				cleanupClient(clientFd);
-			} else if (receivedMessage == "shutdown") {
-				std::cout << "Received shutdown message. Shutting down server." << std::endl;
-				cleanup();
-				exit(0);
+				std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
+				if (receivedMessage == "close") {
+					std::cout << "Received close message. Shutting down client." << std::endl;
+					cleanupClient(clientFd);
+				} else if (receivedMessage == "shutdown") {
+					std::cout << "Received shutdown message. Shutting down server." << std::endl;
+					cleanup();
+					exit(0);
+				}
 			}
 		}
 	}
