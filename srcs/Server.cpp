@@ -1,6 +1,6 @@
 #include "../includes/Server.hpp"
 
-Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1)
+Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1), _mapClients(), _cmd(), _params()
 {
 }
 
@@ -8,10 +8,51 @@ Server::~Server()
 {
 	for (size_t i = 0; i < _pollfds.size(); ++i)
 	{
-    	close(_pollfds[i].fd);
+		close(_pollfds[i].fd);
 	}
 	_pollfds.clear();
 }
+
+
+void Server::start()
+{
+	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_server_fd == -1)
+	{
+		std::cerr << "Failed to create socket! Error: "<< std::endl;
+		exit(0);
+	}
+
+	int flags = fcntl(_server_fd, F_GETFL, 0);
+	if (flags == -1 || fcntl(_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+		std::cerr << "Failed to set non-blocking mode! Error: "<< std::endl;
+		close(_server_fd);
+		exit(0);
+	}
+
+	// Specify socket address
+	_serverAddress.sin_family = AF_INET; // IPv4
+	_serverAddress.sin_port = htons(_port); // Convertida p/ a ordem de bytes de rede
+	_serverAddress.sin_addr.s_addr = INADDR_ANY; // Qualquer endereço IP disponível
+
+	if (bind(_server_fd, (sockaddr*)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		std::cerr << "Binding failed! Error: "<< std::endl;
+		close(_server_fd);
+		exit(0);
+	}
+
+	if (listen(_server_fd, 5) == -1)
+	{
+		std::cerr << "Listening failed! Error: "<< std::endl;
+		close(_server_fd);
+		exit(0);
+	}
+
+	std::cout << "Server is running and waiting for connections..." << std::endl << std::flush;// std::flush evita que o buffer seja limpo antes de imprimir a mensagem
+}
+
 
 void Server::run()
 {
@@ -27,164 +68,249 @@ void Server::run()
 
 	while (running)
 	{
-		//monitor sockets
-		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1); // Timeout -1 means wait indefinitely
+		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
 		if (pollResult == -1)
 		{
 			std::cerr << "Poll failed! Error: "<< std::endl;
 			break;
 		}
 
-		// Check if there's activity on the server socket
+		// Handle new connection
 		if (_pollfds[0].revents & POLLIN)
 		{
-			sockaddr_in clientAddress;
-			socklen_t clientSize = sizeof(clientAddress);
-			int clientFd = accept(_server_fd, (sockaddr*)&clientAddress, &clientSize);
-			if (clientFd == -1)
-			{
-				std::cerr << "Failed to accept connection! Error: "<< std::endl;
-				continue;
-			}
-
-			// Set the new socket to non-blocking mode
-			int flags = fcntl(clientFd, F_GETFL, 0);
-			if (flags == -1 || fcntl(clientFd, F_SETFL, flags | O_NONBLOCK) == -1)
-			{
-				std::cerr << "Failed to set non-blocking mode for client socket! Error: "<< std::endl;
-				close(clientFd);
-				continue;
-			}
-
-			// Add new client socket to pollfds
-			struct pollfd clientPollFd;
-			clientPollFd.fd = clientFd;
-			clientPollFd.events = POLLIN; // Monitor for incoming data
-			clientPollFd.revents = 0;
-			_pollfds.push_back(clientPollFd);
-
-			_authenticatedClients[clientFd] = false;
-
-			// Send a password prompt to the client
-			const std::string passwordPrompt = "Please enter the password:\n";
-			send(clientFd, passwordPrompt.c_str(), passwordPrompt.size(), 0);
-
-
-
-
-			std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl << std::flush;
+			handleNewConnection();
 		}
 
+		// Handle client activity
 		for (size_t i = 1; i < _pollfds.size(); ++i)
 		{
 			if (_pollfds[i].revents & POLLIN)
 			{
 				char buffer[4096];
+				// std::fill(buffer, buffer + sizeof(buffer), 0);// evdos-sa: substitui memset por std::fill
 				memset(buffer, 0, sizeof(buffer));
 				int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
 				if (bytesReceived == -1)
 				{
-					std::cerr << "Failed to receive message from client! Error: "<< std::endl;
-					close(_pollfds[i].fd);
-					_pollfds.erase(_pollfds.begin() + i);
-					--i; // Adjust index after removal
+					std::cerr << "Failed to receive message from client. Error: " << std::endl;
+					cleanup();
 				}
 				else if (bytesReceived == 0)
 				{
-					std::cout << "Client disconnected" << std::endl << std::flush;
-					close(_pollfds[i].fd);
-					_pollfds.erase(_pollfds.begin() + i);
-					--i; // Adjust index after removal
+					std::cout << "Client disconnected" << std::endl;
+					cleanup();
 				}
 				else
 				{
 					std::string receivedMessage(buffer, bytesReceived);
 					receivedMessage.erase(receivedMessage.find_last_not_of("\r\n") + 1);
-
-					if (!_authenticatedClients[_pollfds[i].fd])
-					{
-						// Client has not been authenticated, check the password
-						if (receivedMessage == _password)
-						{
-							_authenticatedClients[_pollfds[i].fd] = true;
-							const std::string welcomeMessage = "Password accepted. You are now connected.\n";
-							send(_pollfds[i].fd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
-							std::cout << "Client authenticated." << std::endl << std::flush;
-						}
-						else
-						{
-							const std::string errorMessage = "Invalid password. Connection will be closed.\n";
-							send(_pollfds[i].fd, errorMessage.c_str(), errorMessage.size(), 0);
-							close(_pollfds[i].fd);
-							_authenticatedClients.erase(_pollfds[i].fd);
-							_pollfds.erase(_pollfds.begin() + i);
-							--i; // Adjust index after removal
-						}
-					}
-					else
-					{
-						std::cout << "Message from client: " << receivedMessage << std::endl << std::flush;
-						//Testing
-						if (receivedMessage == "close")
-						{
-							std::cout << "Received close message. Shutting down client." << std::endl << std::flush;
-							close(_pollfds[i].fd);
-							_pollfds.erase(_pollfds.begin() + i);
-							--i; // Adjust index after removal
-							break; // Exit the for loop to process remaining clients
-						}
-						if (receivedMessage == "shutdown")
-						{
-							std::cout << "Received close message. Shutting down server." << std::endl << std::flush;
-							running = false;
-							break; // Exit the for loop to process remaining clients
-						}
-					}
+					processClientMessage(_pollfds[i].fd, receivedMessage);
 				}
 			}
 		}
 	}
 }
 
-void Server::start()
+void Server::handleNewConnection()
 {
-	// Create a socket
-	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_server_fd == -1)
+	Client		client;
+	sockaddr_in	clientAddress;// evdos-sa: incorporar na classe Client
+
+	socklen_t clientSize = sizeof(clientAddress);
+
+	// client.setClientFd(accept(_server_fd, (sockaddr*)&clientAddress, &clientSize));
+	int clientFd = accept(_server_fd, (sockaddr*)&clientAddress, &clientSize);
+	if (clientFd == -1)
 	{
-		std::cerr << "Failed to create socket! Error: "<< std::endl;
-		exit(0);
+		std::cerr << "Failed to accept connection! Error: " << std::endl;
+		return;
 	}
 
-	// Set the socket to non-blocking mode
-	int flags = fcntl(_server_fd, F_GETFL, 0);
-	if (flags == -1 || fcntl(_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	// Set the new socket to non-blocking mode
+	int flags = fcntl(clientFd, F_GETFL, 0);
+	if (flags == -1 || fcntl(clientFd, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
-		std::cerr << "Failed to set non-blocking mode! Error: "<< std::endl;
-		close(_server_fd);
-		exit(0);
+		std::cerr << "Failed to set non-blocking mode for client socket! Error: " << std::endl;
+		close(clientFd);
+		return;
 	}
 
-	// Specify socket address
-	_serverAddress.sin_family = AF_INET;
-	_serverAddress.sin_port = htons(_port);
-	_serverAddress.sin_addr.s_addr = INADDR_ANY;
+	// Add new client socket to pollfds
+	struct pollfd clientPollFd;
+	clientPollFd.fd = clientFd;
+	clientPollFd.events = POLLIN; // Monitor for incoming data
+	clientPollFd.revents = 0;
+	_pollfds.push_back(clientPollFd);
 
-	// Bind socket
-	if (bind(_server_fd, (sockaddr*)&_serverAddress, sizeof(_serverAddress)) == -1)
+	// Store the new client
+	client.setClientFd(clientFd);
+	_mapClients[clientFd] = client;
+	_authenticatedClients[clientFd] = false;
+
+	// Send a password prompt to the client
+	const std::string passwordPrompt = "Please enter the password:\n";
+	send(client.getClientFd(), passwordPrompt.c_str(), passwordPrompt.size(), 0);
+
+	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
+}
+
+void Server::splitCmdLine(std::string input)
+{
+	// enquanto a stack nao estiver vazia, limpa
+	while (!_params.empty())
+		_params.pop();
+
+	input = input.substr(input.find_first_not_of(" "));
+	size_t space_pos = input.find_first_of(" ");
+	_cmd = input.substr(0, space_pos);
+
+	size_t i;
+	i = 0;
+
+	while (i < _cmd.size())
 	{
-		std::cerr << "Binding failed! Error: "<< std::endl;
-		close(_server_fd);
-		exit(0);
+		if (std::islower (_cmd[i]))
+			_cmd[i] = std::toupper (_cmd[i]);
+		i++;
 	}
 
-	// Listen
-	if (listen(_server_fd, 5) == -1)
-	{
-		std::cerr << "Listening failed! Error: "<< std::endl;
-		close(_server_fd);
-		exit(0);
-	}
+	if (space_pos != std::string::npos)
+		++space_pos;
+	input.erase(0, space_pos);
 
-	std::cout << "Server is running and waiting for connections..." << std::endl << std::flush;
+	while (!input.empty())
+	{
+		input = input.substr(input.find_first_not_of(" "));
+		if (input[0] == ':')
+		{
+			input.erase(input.begin());
+			if (!input.empty())
+				_params.push(input);
+			break;
+		}
+		space_pos = input.find_first_of(" ");
+		if (space_pos == std::string::npos)
+		{
+			_params.push(input);
+			break;
+		}
+		else
+		{
+			_params.push(input.substr(0, space_pos));
+			input.erase(0, ++space_pos);
+		}
+	}
+}
+
+void Server::processClientMessage(int clientFd, const std::string &receivedMessage)
+{
+	Client &client = _mapClients[clientFd];
+
+	splitCmdLine(receivedMessage);
+	std::cout << "Command: " << _cmd << std::endl;
+
+	if (!_cmd.empty())
+	{
+		if (_cmd == "PASS")
+		{
+			std::cout << "Received password: " << _params.top() << std::endl;
+			std::cout << "Params size: " << _params.size() << std::endl;
+			if (_params.size() == 1)
+			{
+				if (_params.top() == _password)
+				{
+					_authenticatedClients[clientFd] = true;
+					const std::string welcomeMessage = "Password accepted. You are now connected.\n";
+					send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
+					std::cout << "Client authenticated." << std::endl;
+					// _params.pop();
+				}
+				else
+				{
+					const std::string errorMessage = "Invalid password. Connection will be closed.\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					cleanupClient(clientFd);
+					// _params.pop();
+				}
+			}
+			else
+			{
+				const std::string errorMessage = "Invalid password. Connection will be closed.\n";
+				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+				cleanupClient(clientFd);
+			}
+		}
+		else if (_cmd == "NICK" && _authenticatedClients[clientFd])
+		{
+			if (_params.size() != 0 && client.getNickName().empty())
+			{
+				client.setNickName(_params.top());
+				const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
+				send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
+				// _params.pop();
+			}
+			else
+			{
+				const std::string errorMessage = "Invalid nickname. Connection will be closed.\n";
+				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+				cleanupClient(clientFd);
+			}
+		}
+		else if (_cmd == "SET" && _authenticatedClients[clientFd])
+		{
+			if (_params.size() != 2)
+			{
+				client.setNickName(_params.top());
+				const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
+				send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
+				// _params.pop();
+			}
+			else
+			{
+				const std::string errorMessage = "Invalid parameters. Connection will be closed.\n";
+				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+				cleanupClient(clientFd);
+			}
+		}
+		else if (_cmd.empty() && _params.empty())
+		{
+			return ;
+		}
+		else
+		{
+			std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
+			if (receivedMessage == "close") {
+				std::cout << "Received close message. Shutting down client." << std::endl;
+				cleanupClient(clientFd);
+			} else if (receivedMessage == "shutdown") {
+				std::cout << "Received shutdown message. Shutting down server." << std::endl;
+				cleanup();
+				exit(0);
+			}
+		}
+	}
+}
+
+void Server::cleanupClient(int clientFd) {
+	std::cout << "Cleaning up client " << clientFd << std::endl;
+	close(clientFd);
+	_authenticatedClients.erase(clientFd);
+	_mapClients.erase(clientFd);
+
+	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+		if (it->fd == clientFd) {
+			_pollfds.erase(it);
+			break;
+		}
+	}
+}
+
+void Server::cleanup()
+{
+	for (size_t i = 1; i < _pollfds.size(); ++i)
+	{
+		close(_pollfds[i].fd);
+		_pollfds.erase(_pollfds.begin() + i);
+		--i;
+	}
 }

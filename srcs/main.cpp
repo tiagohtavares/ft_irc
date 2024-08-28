@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	int port = atoi(argv[1]);
+	int port = atoi(argv[1]);//	stdlib.h substituida por cstdlib para c++ (atoi)
 	std::string password = argv[2];
 
 	Server server(port, password);
