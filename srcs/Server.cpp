@@ -53,76 +53,68 @@ void Server::start()
 	std::cout << "Server is running and waiting for connections..." << std::endl << std::flush;// std::flush evita que o buffer seja limpo antes de imprimir a mensagem
 }
 
-
 void Server::run()
 {
-	start();
+    start();
 
-	struct pollfd serverPollFd;
-	serverPollFd.fd = _server_fd;
-	serverPollFd.events = POLLIN; // Monitor for incoming connections
-	serverPollFd.revents = 0;
-	_pollfds.push_back(serverPollFd);
+    struct pollfd serverPollFd;
+    serverPollFd.fd = _server_fd;
+    serverPollFd.events = POLLIN; // Monitor for incoming connections
+    serverPollFd.revents = 0;
+    _pollfds.push_back(serverPollFd);
 
-	bool running = true;
+    bool running = true;
 
-	while (running)
-	{
-		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
-		if (pollResult == -1)
-		{
-			std::cerr << "Poll failed! Error: "<< std::endl;
-			break;
-		}
+    while (running)
+    {
+        int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
+        if (pollResult == -1)
+        {
+            std::cerr << "Poll failed! Error: "<< std::endl;
+            break;
+        }
 
-		// Handle new connection
-		if (_pollfds[0].revents & POLLIN)
-		{
-			handleNewConnection();
-		}
+        // Handle new connection
+        if (_pollfds[0].revents & POLLIN)
+        {
+            handleNewConnection();
+        }
 
-
-		//---------------------TO DO ----------------------
-		//Create Channel Class
-		//Channel will have users connected to it and forward messages a user sends in chat to everyone
-		//it will show all users connected to that channel aswell
-		//Create default public channel everyone can join
-
-
-		// Handle client activity
-		for (size_t i = 1; i < _pollfds.size(); ++i)
-		{
-			if (_pollfds[i].revents & POLLIN)
-			{
-				char buffer[4096];
-				// std::fill(buffer, buffer + sizeof(buffer), 0);// evdos-sa: substitui memset por std::fill
-				memset(buffer, 0, sizeof(buffer));
-				int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
-				if (bytesReceived == -1)
-				{
-					std::cerr << "Failed to receive message from client. Error: " << std::endl;
-					cleanup();
-				}
-				else if (bytesReceived == 0)
-				{
-					std::cout << "Client disconnected" << std::endl;
-					cleanup();
-				}
-				else
-				{
-					std::string receivedMessage(buffer, bytesReceived);
-					receivedMessage.erase(receivedMessage.find_last_not_of("\r\n") + 1);
-					std::cout << "Received message " << receivedMessage << std::endl;
-					processClientMessage(_pollfds[i].fd, receivedMessage);
-					//Parser needs to handle situation when message comes like this
-					//Recieved message: PASS asd
-					//NICK _nick
-					//both commands in one buffer {end}
-				}
-			}
-		}
-	}
+        // Handle client activity
+        for (size_t i = 1; i < _pollfds.size(); ++i)
+        {
+            if (_pollfds[i].revents & POLLIN)
+            {
+                char buffer[4096];
+                memset(buffer, 0, sizeof(buffer));
+                int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
+                if (bytesReceived == -1)
+                {
+                    std::cerr << "Failed to receive message from client. Error: " << std::endl;
+                    cleanup();
+                }
+                else if (bytesReceived == 0)
+                {
+                    std::cout << "Client disconnected" << std::endl;
+                    cleanup();
+                }
+                else
+                {
+                    std::string receivedMessage(buffer, bytesReceived);
+                    size_t pos = 0;
+                    while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
+                    {
+                        std::string singleMessage = receivedMessage.substr(0, pos);
+                        receivedMessage.erase(0, pos + 2); // Remove the processed message
+                        splitCmdLine(singleMessage);
+                        processClientMessage(_pollfds[i].fd, _cmd, _params);
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 void Server::handleNewConnection()
 {
@@ -169,7 +161,6 @@ void Server::handleNewConnection()
 
 void Server::splitCmdLine(std::string input)
 {
-	// enquanto a stack nao estiver vazia, limpa
 	while (!_params.empty())
 		_params.pop();
 
@@ -214,57 +205,44 @@ void Server::splitCmdLine(std::string input)
 		}
 	}
 }
-//One function should do the parse and send those commands to a function that will do something with them
-//void Server::parse(std::string recievedMessage);
 
 
 
 
-
-//This function should recieve a command and args of that command
-void Server::processClientMessage(int clientFd, const std::string &receivedMessage)
-//(std::string comd, std::stack<params> params)
+void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std::string> params)
 {
 	Client &client = _mapClients[clientFd];
 
-	splitCmdLine(receivedMessage);
-	// if (!_cmd.empty())
-	// 	std::cout << "Command: " << _cmd << std::endl;
-	// if (!_params.empty())
-	// 	std::cout << "Params:  " << _params.top() << std::endl;
-
 	//------------------TO DO ----------------------
 	//Generate proper responses to client after recieving command
-	if (!_cmd.empty())
+	if (!cmd.empty())
 	{
 		if(!_authenticatedClients[clientFd])
 		{
-			// Temos de tratar a situacao de CAP mais a frente
-			// std::cout << "Client " << clientFd <<  "not auth" << std::endl;
-			if (_cmd == "CAP")
+			if (cmd == "CAP")
 			{
 				return;
 			}
-			else if (_cmd == "PASS")
+			else if (cmd == "PASS")
 			{
-				std::cout << "Received password: " << _params.top() << std::endl;
-				std::cout << "Params size: " << _params.size() << std::endl;
-				if (_params.size() == 1)
+				std::cout << "Received password: " << params.top() << std::endl;
+				std::cout << "Params size: " << params.size() << std::endl;
+				if (params.size() == 1)
 				{
-					if (_params.top() == _password)
+					if (params.top() == _password)
 					{
 						_authenticatedClients[clientFd] = true;
 						const std::string welcomeMessage = "Password accepted. You are now connected.\n";
 						send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
 						std::cout << "Client authenticated." << std::endl;
-						// _params.pop();
+						// params.pop();
 					}
 					else
 					{
 						const std::string errorMessage = "Invalid password. Connection will be closed.\n";
 						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 						cleanupClient(clientFd);
-						// _params.pop();
+                        return; 
 					}
 				}
 			}
@@ -273,59 +251,62 @@ void Server::processClientMessage(int clientFd, const std::string &receivedMessa
 				const std::string errorMessage = "Invalid command. Connection will be closed.\n";
 				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 				cleanupClient(clientFd);
+				return;
 			}
 		}
 		if(_authenticatedClients[clientFd])
 		{
-			if (_cmd == "NICK")
+			if (cmd == "NICK")
 			{
-				if (_params.size() != 0 && client.getNickName().empty())
+				if (params.size() != 0 && client.getNickName().empty())
 				{
-					client.setNickName(_params.top());
+					client.setNickName(params.top());
 					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
 					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-					// _params.pop();
+					// params.pop();
 				}
 				else
 				{
 					const std::string errorMessage = "Invalid nickname. Connection will be closed.\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					cleanupClient(clientFd);
+					return;
 				}
 			}
-			else if (_cmd == "SET")
+			else if (cmd == "SET")
 			{
-				if (_params.size() != 2)
+				if (params.size() != 2)
 				{
-					client.setNickName(_params.top());
+					client.setNickName(params.top());
 					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
 					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-					// _params.pop();
+					// params.pop();
 				}
 				else
 				{
 					const std::string errorMessage = "Invalid parameters. Connection will be closed.\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					cleanupClient(clientFd);
+					return;
 				}
 			}
 
 			//TESTING
-			else if (_cmd == "PRIVMSG")
+			else if (cmd == "PRIVMSG")
 			{
-				if (_params.size() < 2)
+				if (params.size() < 2)
 				{
 					const std::string errorMessage = "Usage: PRIVMSG <nickname> <message>\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 				}
 				else
 				{
-					std::string message = _params.top();  // Get the actual message
+					std::string message = params.top();  // Get the actual message
 					std::cout << "message: " << message << std::endl;
-					_params.pop();
-					std::string recipientNick = _params.top();  // Get recipient's nickname
+					params.pop();
+					std::string recipientNick = params.top();  // Get recipient's nickname
 					std::cout << "recipient nick: " << recipientNick << std::endl;
-					_params.pop();
+					params.pop();
 
 					std::string senderNick = _mapClients[clientFd].getNickName();
 					std::string formattedMessage = senderNick + ": " + message + "\n";
@@ -346,17 +327,17 @@ void Server::processClientMessage(int clientFd, const std::string &receivedMessa
 
 
 
-			else if (_cmd.empty() && _params.empty())
+			else if (cmd.empty() && params.empty())
 			{
 				return ;
 			}
 			else
 			{
-				std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
-				if (receivedMessage == "close") {
+				// std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
+				if (cmd == "CLOSE") {
 					std::cout << "Received close message. Shutting down client." << std::endl;
 					cleanupClient(clientFd);
-				} else if (receivedMessage == "shutdown") {
+				} else if (cmd == "SHUTDOWN") {
 					std::cout << "Received shutdown message. Shutting down server." << std::endl;
 					cleanup();
 					exit(0);

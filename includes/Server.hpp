@@ -38,7 +38,8 @@ class Server
 		std::stack<std::string> _params;
 
 		void	handleNewConnection();
-		void	processClientMessage(int clientFd, const std::string &receivedMessage);
+		// void	processClientMessage(int clientFd, const std::string &receivedMessage);
+		void 	processClientMessage(int clientFd, std::string cmd, std::stack<std::string> params);
 		void	cleanup();
 		void	cleanupClient(int clientFd);
 		void	splitCmdLine(std::string input);

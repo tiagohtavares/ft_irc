@@ -37,5 +37,4 @@ class Client
 		int			_clientFd;
 		std::string	_nickName;
 		bool		_authenticated;
-		// sockaddr_in	_clientAddress;
 };

@@ -1,21 +1,16 @@
 {
-    "configurations": [
-      {
-        "name": "WSL",
-        "includePath": [
-          "${workspaceFolder}/**",
-          "\\\\wsl$\\Ubuntu\\usr\\include",
-          "\\\\wsl$\\Ubuntu\\usr\\include\\x86_64-linux-gnu",
-          "\\\\wsl$\\Ubuntu\\usr\\lib\\gcc\\x86_64-linux-gnu\\9\\include",
-          "\\\\wsl$\\Ubuntu\\usr\\local\\include",
-          "\\\\wsl$\\Ubuntu\\usr\\lib\\gcc\\x86_64-linux-gnu\\9\\include-fixed"
-        ],
-        "defines": [],
-        "compilerPath": "/usr/bin/gcc",
-        "cStandard": "c11",
-        "cppStandard": "c++17",
-        "intelliSenseMode": "gcc-x64"
-      }
-    ],
-    "version": 4
-  }
+  "configurations": [
+    {
+      "name": "linux-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "${default}",
+      "cppStandard": "${default}",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}
