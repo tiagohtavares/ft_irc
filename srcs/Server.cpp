@@ -81,6 +81,14 @@ void Server::run()
 			handleNewConnection();
 		}
 
+
+		//---------------------TO DO ----------------------
+		//Create Channel Class
+		//Channel will have users connected to it and forward messages a user sends in chat to everyone
+		//it will show all users connected to that channel aswell
+		//Create default public channel everyone can join
+
+
 		// Handle client activity
 		for (size_t i = 1; i < _pollfds.size(); ++i)
 		{
@@ -106,6 +114,10 @@ void Server::run()
 					receivedMessage.erase(receivedMessage.find_last_not_of("\r\n") + 1);
 					std::cout << "Received message " << receivedMessage << std::endl;
 					processClientMessage(_pollfds[i].fd, receivedMessage);
+					//Parser needs to handle situation when message comes like this
+					//Recieved message: PASS asd
+					//NICK _nick
+					//both commands in one buffer {end}
 				}
 			}
 		}
@@ -202,8 +214,16 @@ void Server::splitCmdLine(std::string input)
 		}
 	}
 }
+//One function should do the parse and send those commands to a function that will do something with them
+//void Server::parse(std::string recievedMessage);
 
+
+
+
+
+//This function should recieve a command and args of that command
 void Server::processClientMessage(int clientFd, const std::string &receivedMessage)
+//(std::string comd, std::stack<params> params)
 {
 	Client &client = _mapClients[clientFd];
 
@@ -213,6 +233,8 @@ void Server::processClientMessage(int clientFd, const std::string &receivedMessa
 	// if (!_params.empty())
 	// 	std::cout << "Params:  " << _params.top() << std::endl;
 
+	//------------------TO DO ----------------------
+	//Generate proper responses to client after recieving command
 	if (!_cmd.empty())
 	{
 		if(!_authenticatedClients[clientFd])

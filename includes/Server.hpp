@@ -42,4 +42,5 @@ class Server
 		void	cleanup();
 		void	cleanupClient(int clientFd);
 		void	splitCmdLine(std::string input);
+		void	parse(std::string receivedMessage);
 };
