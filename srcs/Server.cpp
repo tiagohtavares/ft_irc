@@ -55,76 +55,75 @@ void Server::start()
 
 void Server::run()
 {
-    start();
+	start();
 
-    struct pollfd serverPollFd;
-    serverPollFd.fd = _server_fd;
-    serverPollFd.events = POLLIN; // Monitor for incoming connections
-    serverPollFd.revents = 0;
-    _pollfds.push_back(serverPollFd);
+	struct pollfd serverPollFd;
+	serverPollFd.fd = _server_fd;
+	serverPollFd.events = POLLIN; // Monitor for incoming connections
+	serverPollFd.revents = 0;
+	_pollfds.push_back(serverPollFd);
 
-    bool running = true;
+	bool running = true;
 
-    while (running)
-    {
-        int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
-        if (pollResult == -1)
-        {
-            std::cerr << "Poll failed! Error: "<< std::endl;
-            break;
-        }
+	while (running)
+	{
+		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
+		if (pollResult == -1)
+		{
+			std::cerr << "Poll failed! Error: "<< std::endl;
+			break;
+		}
 
-        // Handle new connection
-        if (_pollfds[0].revents & POLLIN)
-        {
-            handleNewConnection();
-        }
+		// Handle new connection
+		if (_pollfds[0].revents & POLLIN)
+		{
+			handleNewConnection();
+		}
 
-        // Handle client activity
-        for (size_t i = 1; i < _pollfds.size(); ++i)
-        {
-            if (_pollfds[i].revents & POLLIN)
-            {
-                char buffer[4096];
-                memset(buffer, 0, sizeof(buffer));
-                int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
-                if (bytesReceived == -1)
-                {
-                    std::cerr << "Failed to receive message from client. Error: " << std::endl;
-                    cleanup();
-                }
-                else if (bytesReceived == 0)
-                {
-                    std::cout << "Client disconnected" << std::endl;
-                    cleanup();
-                }
-                else
-                {
-                    std::string receivedMessage(buffer, bytesReceived);
+		// Handle client activity
+		for (size_t i = 1; i < _pollfds.size(); ++i)
+		{
+			if (_pollfds[i].revents & POLLIN)
+			{
+				char buffer[4096];
+				memset(buffer, 0, sizeof(buffer));
+				int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
+				if (bytesReceived == -1)
+				{
+					std::cerr << "Failed to receive message from client. Error: " << std::endl;
+					cleanup();
+				}
+				else if (bytesReceived == 0)
+				{
+					std::cout << "Client disconnected" << std::endl;
+					cleanup();
+				}
+				else
+				{
+					std::string receivedMessage(buffer, bytesReceived);
 					std::cout << "Received message: " << receivedMessage << std::endl;
-                    size_t pos = 0;
-                    while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
-                    {
-                        std::string singleMessage = receivedMessage.substr(0, pos);
-                        receivedMessage.erase(0, pos + 2); // Remove the processed message
-                        splitCmdLine(singleMessage);
-                        processClientMessage(_pollfds[i].fd, _cmd, _params);
-                    }
-                }
-            }
-        }
-    }
+					size_t pos = 0;
+					while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
+					{
+						std::string singleMessage = receivedMessage.substr(0, pos);
+						receivedMessage.erase(0, pos + 2); // Remove the processed message
+						splitCmdLine(singleMessage);
+						processClientMessage(_pollfds[i].fd, _cmd, _params);
+					}
+				}
+			}
+		}
+	}
 }
 
 
 void Server::handleNewConnection()
 {
 	Client		client;
-	sockaddr_in	clientAddress;// evdos-sa: incorporar na classe Client
+	sockaddr_in	clientAddress;
 
 	socklen_t clientSize = sizeof(clientAddress);
 
-	// client.setClientFd(accept(_server_fd, (sockaddr*)&clientAddress, &clientSize));
 	int clientFd = accept(_server_fd, (sockaddr*)&clientAddress, &clientSize);
 	if (clientFd == -1)
 	{
@@ -212,7 +211,9 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 
 	std::cout << "cmd: " << cmd << std::endl;
 
-		std::vector<std::string> temp;
+
+	//Solucao temp inverto a stack para ter NICK :MENSAGEM ,em vez de MENSAGEM: NICK
+	std::vector<std::string> temp;
 
 	std::queue<std::string> queue;
 
@@ -250,8 +251,6 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 		params.push(*it);
 	}
 
-	//------------------TO DO ----------------------
-	//Generate proper responses to client after recieving command
 	if (!cmd.empty())
 	{
 		if(!_authenticatedClients[clientFd])
@@ -279,7 +278,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 						const std::string errorMessage = "Invalid password. Connection will be closed.\n";
 						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 						cleanupClient(clientFd);
-                        return;
+						return;
 					}
 				}
 			}
@@ -404,14 +403,17 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 	}
 }
 
-void Server::cleanupClient(int clientFd) {
+void Server::cleanupClient(int clientFd)
+{
 	std::cout << "Cleaning up client " << clientFd << std::endl;
 	close(clientFd);
 	_authenticatedClients.erase(clientFd);
 	_mapClients.erase(clientFd);
 
-	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
-		if (it->fd == clientFd) {
+	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
+	{
+		if (it->fd == clientFd)
+		{
 			_pollfds.erase(it);
 			break;
 		}
