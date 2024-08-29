@@ -11,6 +11,7 @@
 # include <cstdlib> // substitui a biblioteca stdlib.h
 # include <poll.h>
 # include <map>
+#include <queue>
 
 # include <set>
 

@@ -1,4 +1,6 @@
 
+#pragma once
+
 # include <iostream>
 # include <string>
 # include <vector>
@@ -24,6 +26,8 @@ class Client
 		// getters
 		int			getClientFd() const;
 		std::string	getNickName() const;
+		std::string	getUserName() const;
+		std::string	getRealName() const;
 		bool		getAuthenticated() const;
 
 		// setters
@@ -31,10 +35,14 @@ class Client
 		void		setNickName(const std::string &nickName);
 		void		setAuthenticated(bool authenticated);
 		void		setClientAddress(sockaddr_in clientAddress);
+		void		setUserName(const std::string &userName);
+		void		setRealName(const std::string &realName);
 
 
 	private:
 		int			_clientFd;
+		std::string _userName;
 		std::string	_nickName;
+		std::string	_realName;
 		bool		_authenticated;
 };

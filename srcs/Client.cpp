@@ -1,4 +1,5 @@
 #include "../includes/Client.hpp"
+#include "Client.hpp"
 
 // Contrutor and Destructor
 
@@ -23,6 +24,16 @@ std::string Client::getNickName() const
 	return _nickName;
 }
 
+std::string Client::getUserName() const
+{
+	return _userName;
+}
+
+std::string Client::getRealName() const
+{
+	return _realName;
+}
+
 bool Client::getAuthenticated() const
 {
 	return _authenticated;
@@ -38,6 +49,14 @@ void Client::setAuthenticated(bool authenticated)
 	_authenticated = authenticated;
 }
 
+void Client::setUserName(const std::string &userName)
+{
+	_userName = userName;
+}
+void Client::setRealName(const std::string &realName)
+{
+	_realName = realName;
+}
 void Client::setClientFd(int clientFd)
 {
 	_clientFd = clientFd;

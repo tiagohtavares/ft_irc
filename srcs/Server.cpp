@@ -101,6 +101,7 @@ void Server::run()
                 else
                 {
                     std::string receivedMessage(buffer, bytesReceived);
+					std::cout << "Received message: " << receivedMessage << std::endl;
                     size_t pos = 0;
                     while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
                     {
@@ -151,10 +152,6 @@ void Server::handleNewConnection()
 	client.setClientFd(clientFd);
 	_mapClients[clientFd] = client;
 	_authenticatedClients[clientFd] = false;
-
-	// // Send a password prompt to the client
-	// const std::string passwordPrompt = "Please enter the password:\n";
-	// send(client.getClientFd(), passwordPrompt.c_str(), passwordPrompt.size(), 0);
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
 }
@@ -213,6 +210,46 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 {
 	Client &client = _mapClients[clientFd];
 
+	std::cout << "cmd: " << cmd << std::endl;
+
+		std::vector<std::string> temp;
+
+	std::queue<std::string> queue;
+
+	// Transfer elements from stack to queue
+	while (!params.empty())
+	{
+		queue.push(params.top());
+		params.pop();
+	}
+
+	// Transfer elements from queue back to stack
+	while (!queue.empty())
+	{
+		params.push(queue.front());
+		queue.pop();
+	}
+
+	// Traverse the stack
+	while (!params.empty())
+	{
+		// Pop the top element
+		std::string topElement = params.top();
+		params.pop();
+
+		// Print the element
+		std::cout << "params: " << topElement << std::endl;
+
+		// Store it in the temporary container
+		temp.push_back(topElement);
+	}
+
+	std::vector<std::string>::reverse_iterator it;
+	for (it = temp.rbegin(); it != temp.rend(); ++it)
+	{
+		params.push(*it);
+	}
+
 	//------------------TO DO ----------------------
 	//Generate proper responses to client after recieving command
 	if (!cmd.empty())
@@ -242,7 +279,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 						const std::string errorMessage = "Invalid password. Connection will be closed.\n";
 						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 						cleanupClient(clientFd);
-                        return; 
+                        return;
 					}
 				}
 			}
@@ -256,14 +293,11 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 		}
 		if(_authenticatedClients[clientFd])
 		{
-			if (cmd == "NICK")
+			if (cmd == "NICK" )
 			{
-				if (params.size() != 0 && client.getNickName().empty())
+				if (params.size() != 0) 		//Lidar com situacao de 2 nicks iguais ------------!!!!!!!!!!!!!!!!!!
 				{
 					client.setNickName(params.top());
-					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
-					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-					// params.pop();
 				}
 				else
 				{
@@ -273,25 +307,38 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 					return;
 				}
 			}
-			else if (cmd == "SET")
+			else if (cmd == "USER" && client.getUserName().empty())
 			{
-				if (params.size() != 2)
+				if (params.size() >= 4) // Typically, USER command has 4 parameters
 				{
-					client.setNickName(params.top());
-					const std::string welcomeNick = "Welcome, " + client.getNickName() + "!\n";
-					send(clientFd, welcomeNick.c_str(), welcomeNick.size(), 0);
-					// params.pop();
+					std::string username = params.top(); params.pop();
+					std::string mode = params.top(); params.pop(); // Mode is typically ignored but popped
+					std::string unused = params.top(); params.pop(); // Unused parameter, typically '*'
+					std::string realName = params.top(); params.pop(); // Real name
+
+					if (client.getUserName().empty()) // Set the username if not already set
+					{
+						client.setUserName(username);
+						client.setRealName(realName);
+
+						// Send a welcome message after USER is set
+						const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
+						send(clientFd, welcomeUser.c_str(), welcomeUser.size(), 0);
+					}
+					else
+					{
+						const std::string errorMessage = "Username already set.\n";
+						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					}
 				}
 				else
 				{
-					const std::string errorMessage = "Invalid parameters. Connection will be closed.\n";
+					const std::string errorMessage = "Invalid USER command. Connection will be closed.\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					cleanupClient(clientFd);
 					return;
 				}
 			}
-
-			//TESTING
 			else if (cmd == "PRIVMSG")
 			{
 				if (params.size() < 2)
@@ -301,15 +348,24 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 				}
 				else
 				{
-					std::string message = params.top();  // Get the actual message
-					std::cout << "message: " << message << std::endl;
-					params.pop();
-					std::string recipientNick = params.top();  // Get recipient's nickname
+					// Get the recipient's nickname first
+					std::string recipientNick = params.top();
 					std::cout << "recipient nick: " << recipientNick << std::endl;
 					params.pop();
 
+					// Combine remaining params into the message
+					std::string message;
+					while (!params.empty())
+					{
+						message = params.top() + (message.empty() ? "" : " " + message);
+						params.pop();
+					}
+					std::cout << "message: " << message << std::endl;
+
 					std::string senderNick = _mapClients[clientFd].getNickName();
 					std::string formattedMessage = senderNick + ": " + message + "\n";
+
+					bool recipientFound = false;
 
 					for (std::map<int, Client>::iterator it = _mapClients.begin(); it != _mapClients.end(); ++it)
 					{
@@ -319,14 +375,18 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 							// Client with the desired nickname found
 							std::cout << "Client with nickname " << recipientNick << " found. Client FD: " << it->first << std::endl;
 							send(it->first, formattedMessage.c_str(), formattedMessage.size(), 0);
+							recipientFound = true;
 							break;  // Exit loop once the client is found
 						}
 					}
+
+					if (!recipientFound)
+					{
+						const std::string errorMessage = "No such user with nickname " + recipientNick + ".\n";
+						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					}
 				}
-			}
-
-
-
+				}
 			else if (cmd.empty() && params.empty())
 			{
 				return ;
@@ -334,13 +394,10 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 			else
 			{
 				// std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
-				if (cmd == "CLOSE") {
+				if (cmd == "QUIT")
+				{
 					std::cout << "Received close message. Shutting down client." << std::endl;
 					cleanupClient(clientFd);
-				} else if (cmd == "SHUTDOWN") {
-					std::cout << "Received shutdown message. Shutting down server." << std::endl;
-					cleanup();
-					exit(0);
 				}
 			}
 		}
