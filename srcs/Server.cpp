@@ -386,7 +386,26 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					}
 				}
+			}
+			else if (cmd == "JOIN") {
+				if (params.size() == 1)
+				{
+					std::string channelName = params.top();
+					params.pop();
+					createChannel(channelName, client);
 				}
+				else
+				{
+					const std::string errorMessage = "Invalid JOIN command. Connection will be closed.\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					cleanupClient(clientFd);
+					return;
+				}
+			}
+			else if (cmd == "LIST")
+			{
+				listChannels(client);
+			}
 			else if (cmd.empty() && params.empty())
 			{
 				return ;
@@ -426,4 +445,50 @@ void Server::cleanup()
 		_pollfds.erase(_pollfds.begin() + i);
 		--i;
 	}
+}
+
+void Server::createChannel(std::string &channelName, Client &creator)
+{
+    // Verificar se o canal já existe
+    if (_channels.find(channelName) == _channels.end()) {
+        // Inserir o novo canal usando insert e std::make_pair
+        _channels.insert(std::make_pair(channelName, Channel(channelName, creator)));
+    } else {
+        const std::string errorMessage = "Channel " + channelName + " already exists.\n";
+        send(creator.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+    }
+}
+
+
+
+// void	Server::createChannel(std::string &channelName, Client &userCreator)
+// {
+// 	if (_channels.find(channelName) == _channels.end())
+// 	{
+// 		Channel newChannel(channelName, userCreator);
+// 		_channels[channelName] = newChannel;
+// 	}
+// 	else
+// 	{
+// 		const std::string errorMessage = "Channel " + channelName + " already exists.\n";
+// 		send(userCreator.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+// 	}
+// }
+
+void	Server::deleteChannel(std::string &channelName)
+{
+	if (_channels.find(channelName) != _channels.end())
+	{
+		_channels.erase(channelName);
+	}
+}
+
+void	Server::listChannels(Client &client)
+{
+	std::string channelList;
+	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		channelList += it->first + "\n";
+	}
+	send(client.getClientFd(), channelList.c_str(), channelList.size(), 0);
 }

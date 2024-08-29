@@ -61,8 +61,3 @@ void Client::setClientFd(int clientFd)
 {
 	_clientFd = clientFd;
 }
-
-// void Client::setClientAddress(sockaddr_in clientAddress)
-// {
-// 	_clientAddress = clientAddress;
-// }
