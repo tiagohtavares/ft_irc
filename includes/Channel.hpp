@@ -10,6 +10,7 @@
 class Channel
 {
 	public:
+		Channel();
 		Channel(std::string &name, Client &creator);
 		~Channel();
 
@@ -20,20 +21,21 @@ class Channel
 		std::string getChannelName() const;
 		std::string getTopic() const;
 		std::string getPassword() const;
+		std::set<int> getMembers() const;
+
+		void	insertMember(Client &client);
+		void	removeMember(Client &client);
 
 	private:
-		Channel();
 
 		std::string					_channelName; // Input in constructor
 		std::string					_topic; // Input in setTopic
 		std::string					_password; // Input in setPassword
-		std::map<int, std::string>	_nicknames;
+		std::map<int, std::string>		_nicknames;
 		std::set<int>				_members;
 		std::set<int>				_operators; // The first operator is the creator of the channel
 		std::set<int>				_banned; // Set of banned clients (setBanned / removeBanned)
 
-		void	insertMember(Client &client);
-		void	removeMember(Client &client);
 		void	memberList();
 
 		void	removeOperator(Client &client);

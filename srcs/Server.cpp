@@ -2,6 +2,7 @@
 
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1), _mapClients(), _cmd(), _params()
 {
+	Channel defaultChannel;
 }
 
 Server::~Server()
@@ -390,9 +391,36 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 			else if (cmd == "JOIN") {
 				if (params.size() == 1)
 				{
-					std::string channelName = params.top();
+					/*
+						* Everton:
+						- Check if the channel exists
+							- Check if the client is already in the channel
+								- If the client is already in the channel, send a message
+								- If the client is not in the channel, add it
+						- If the channel does not exist, create it and add the client
+					*/
+					if (isChannelExist(params.top()))
+					{
+						if (isClientInChannel(params.top(), client))
+						{
+							const std::string errorMessage = "You are already in the " + params.top() + " channel.\n";
+							send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+						}
+						else
+						{
+							_channels[params.top()].insertMember(client);
+						}
+					}
+					else
+					{
+						createChannel(params.top(), client);
+					}
 					params.pop();
-					createChannel(channelName, client);
+
+					// Last implementation
+					// std::string channelName = params.top();
+					// params.pop();
+					// createChannel(channelName, client);
 				}
 				else
 				{
@@ -447,33 +475,46 @@ void Server::cleanup()
 	}
 }
 
-void Server::createChannel(std::string &channelName, Client &creator)
+
+/*
+	* To do: check if the channel is private before inserting the client;
+	* DONE: After the customer has already entered the channel, he cannot enter again;
+*/
+void Server::createChannel(std::string &channelName, Client &client)
 {
-    // Verificar se o canal já existe
-    if (_channels.find(channelName) == _channels.end()) {
-        // Inserir o novo canal usando insert e std::make_pair
-        _channels.insert(std::make_pair(channelName, Channel(channelName, creator)));
-    } else {
-        const std::string errorMessage = "Channel " + channelName + " already exists.\n";
-        send(creator.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
-    }
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		_channels.insert(std::make_pair(channelName, Channel(channelName, client)));
+	}
+	else
+	{
+		it->second.insertMember(client);
+	}
 }
 
+bool	Server::isChannelExist(std::string &channelName)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		return (false);
+	}
+	return (true);
+}
 
-
-// void	Server::createChannel(std::string &channelName, Client &userCreator)
-// {
-// 	if (_channels.find(channelName) == _channels.end())
-// 	{
-// 		Channel newChannel(channelName, userCreator);
-// 		_channels[channelName] = newChannel;
-// 	}
-// 	else
-// 	{
-// 		const std::string errorMessage = "Channel " + channelName + " already exists.\n";
-// 		send(userCreator.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
-// 	}
-// }
+bool	Server::isClientInChannel(std::string &channelName, Client &client)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it != _channels.end())
+	{
+		if (it->second.getMembers().find(client.getClientFd()) != it->second.getMembers().end())
+		{
+			return (true);
+		}
+	}
+	return (false);
+}
 
 void	Server::deleteChannel(std::string &channelName)
 {

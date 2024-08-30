@@ -4,12 +4,16 @@
 /*							Constructors and destructor								*/
 /************************************************************************************/
 
-Channel::Channel(std::string &channelName, Client &userCreator) : _channelName(channelName)
+Channel::Channel() : _channelName("default")
 {
-	insertMember(userCreator);
-	setOperator(userCreator);
+}
+
+Channel::Channel(std::string &channelName, Client &client) : _channelName(channelName)
+{
+	insertMember(client);
+	setOperator(client);
 	const std::string errorMessage = "Channel created!\n";
-	send(userCreator.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+	send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
 }
 
 Channel::~Channel()
@@ -45,6 +49,11 @@ std::string	Channel::getPassword() const
 	return _password;
 }
 
+std::set<int>	Channel::getMembers() const
+{
+	return _members;
+}
+
 /************************************************************************************/
 /*								Channel management									*/
 /************************************************************************************/
@@ -52,7 +61,11 @@ std::string	Channel::getPassword() const
 void	Channel::insertMember(Client &client)
 {
 	if (_password.empty() && _members.find(client.getClientFd()) == _members.end() && _banned.find(client.getClientFd()) == _banned.end())
+	{
 		_members.insert(client.getClientFd());
+		// const std::string errorMessage = "You have joined the channel " + getChannelName() + "!\n";
+		// send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+	}
 }
 
 void	Channel::removeMember(Client &client)

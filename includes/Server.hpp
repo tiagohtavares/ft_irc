@@ -39,9 +39,11 @@ class Server
 		std::map<std::string, Channel>	_channels;
 		void	createChannel(std::string &channelName, Client &creator);
 		void	deleteChannel(std::string &channelName);
-		void	joinChannel(Client &client, std::string &channelName);
-		void	partChannel(Client &client, std::string &channelName);
+		// void	joinChannel(Client &client, std::string &channelName);
+		// void	partChannel(Client &client, std::string &channelName);
 		void	listChannels(Client &client);
+		bool	isChannelExist(std::string &channelName);
+		bool	isClientInChannel(std::string &channelName, Client &client);
 
 		std::string _cmd;
 		std::stack<std::string> _params;
