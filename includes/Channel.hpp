@@ -14,8 +14,8 @@ class Channel
 		Channel(std::string &name, Client &creator);
 		~Channel();
 
-		void	setTopic(const std::string &topic);
-		void	setPassword(const std::string &password);
+		void	setTopic(std::string &topic);
+		void	setPassword(std::string &password);
 		void	setOperator(Client &client);
 
 		std::string getChannelName() const;
@@ -31,10 +31,14 @@ class Channel
 		std::string					_channelName; // Input in constructor
 		std::string					_topic; // Input in setTopic
 		std::string					_password; // Input in setPassword
-		std::map<int, std::string>		_nicknames;
+		std::map<int, std::string>	_nicknames;
 		std::set<int>				_members;
+		bool						_online;
 		std::set<int>				_operators; // The first operator is the creator of the channel
 		std::set<int>				_banned; // Set of banned clients (setBanned / removeBanned)
+
+		bool						_inviteOnly; // Set in setMode
+		std::set<int>				_invited; // Set of invited clients (setInvited / removeInvited)
 
 		void	memberList();
 
@@ -69,3 +73,12 @@ Command list for Channel IRC:
 	- PRIVMSG: Send a message to a channel or user
 */
 
+/*
+Como está agora:
+
+O CLIENT faz JOIN em um CHANNEL, e consegue faz JOIN em outro channel mesmo antes de fazer PART do primeiro.
+*/
+
+/*
+COLOCAR UM BOT PARA FICAR ENVIANDO MENSAGENS PARA O CANAL
+*/

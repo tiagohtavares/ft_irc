@@ -388,8 +388,19 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 					}
 				}
 			}
-			else if (cmd == "JOIN") {
-				if (params.size() == 1)
+			else if (cmd == "JOIN")
+			{
+				if (params.size() == 1 && params.top()[0] == '#' && params.top().size() == 1)
+				{
+						const std::string message = "/JOIN <#channel_name>\n";
+						send(clientFd, message.c_str(), message.size(), 0);
+				}
+				else if (params.size() == 1 && params.top().size() > 1 && params.top()[0] == '#' && params.top()[1] == '#')
+				{
+						const std::string message = "The channel name cannot start with #.\n";
+						send(clientFd, message.c_str(), message.size(), 0);
+				}
+				else if (params.size() == 1 && params.top()[0] == '#' && params.top().size() > 1)
 				{
 					/*
 						* Everton:
@@ -403,8 +414,10 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 					{
 						if (isClientInChannel(params.top(), client))
 						{
-							const std::string errorMessage = "You are already in the " + params.top() + " channel.\n";
-							send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+							// Ajustar a mensagem de erro para apenas quando o cliente ja estiver no canal.
+							// const std::string errorMessage = "You are already in the " + params.top() + " channel.\n";
+							const std::string channelTopic = _channels[params.top()].getTopic() + "\n";
+							send(clientFd, channelTopic.c_str(), channelTopic.size(), 0);
 						}
 						else
 						{
@@ -413,7 +426,9 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 					}
 					else
 					{
-						createChannel(params.top(), client);
+						std::string channelName = params.top().substr(1);
+						createChannel(channelName, client);
+						// createChannel(params.top(), client);
 					}
 					params.pop();
 
@@ -425,6 +440,37 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std:
 				else
 				{
 					const std::string errorMessage = "Invalid JOIN command. Connection will be closed.\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					// cleanupClient(clientFd);
+					// return;
+				}
+			}
+			else if (cmd == "PART")
+			{
+				if (params.size() == 1)
+				{
+					if (isChannelExist(params.top()))
+					{
+						if (isClientInChannel(params.top(), client))
+						{
+							_channels[params.top()].removeMember(client);
+						}
+						else
+						{
+							const std::string errorMessage = "You are not in the " + params.top() + " channel.\n";
+							send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+						}
+					}
+					else
+					{
+						const std::string errorMessage = "The " + params.top() + " channel does not exist.\n";
+						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					}
+					params.pop();
+				}
+				else
+				{
+					const std::string errorMessage = "Invalid PART command. Connection will be closed.\n";
 					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 					cleanupClient(clientFd);
 					return;
@@ -533,3 +579,4 @@ void	Server::listChannels(Client &client)
 	}
 	send(client.getClientFd(), channelList.c_str(), channelList.size(), 0);
 }
+

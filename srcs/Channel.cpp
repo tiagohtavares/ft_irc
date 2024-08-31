@@ -8,11 +8,11 @@ Channel::Channel() : _channelName("default")
 {
 }
 
-Channel::Channel(std::string &channelName, Client &client) : _channelName(channelName)
+Channel::Channel(std::string &channelName, Client &client) : _channelName(channelName), _topic("[" + getChannelName() + "]"), _password(""), _online(true), _inviteOnly(false)
 {
 	insertMember(client);
 	setOperator(client);
-	const std::string errorMessage = "Channel created!\n";
+	const std::string errorMessage = "Channel " + getChannelName() + " created!\n";
 	send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
 }
 
@@ -24,12 +24,12 @@ Channel::~Channel()
 /*							Setters and getters										*/
 /************************************************************************************/
 
-void	Channel::setTopic(const std::string &topic)
+void	Channel::setTopic(std::string &topic)
 {
 	_topic = topic;
 }
 
-void	Channel::setPassword(const std::string &password)
+void	Channel::setPassword(std::string &password)
 {
 	_password = password;
 }
