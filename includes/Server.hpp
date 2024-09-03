@@ -42,7 +42,7 @@ class Server
 		void	createChannel(std::string &channelName, Client &creator);
 		void	deleteChannel(std::string &channelName);
 		void	listChannels(Client &client);
-		bool	isChannelExist(std::string &channelName);
+		bool	isChannelExist(const std::string &channelName) const;
 		bool	isClientInChannel(std::string &channelName, Client &client);
 
 

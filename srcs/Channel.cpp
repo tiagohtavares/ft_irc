@@ -251,6 +251,7 @@ void	Channel::removeMember(std::string nickname)
 			_members.erase(it);
 			std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
 			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+			
 			for (it = _members.begin(); it != _members.end(); it++)
 			{
 				std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
