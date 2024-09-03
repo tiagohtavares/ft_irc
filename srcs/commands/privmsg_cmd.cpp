@@ -12,16 +12,11 @@ void	Server::privmsg_cmd(int clientFd, std::vector<std::string> params)
 		// Get the recipient's nickname first
 		std::string recipientNick = params.front();
 		std::cout << "recipient nick: " << recipientNick << std::endl;
-		// params.pop_back();
 
 		// Combine remaining params into the message
 		std::string message;
-		// while (!params.empty())
-		// {
-		// 	message = params.front() + (message.empty() ? "" : " " + message);
-		// 	params.pop_back();
-		// }
-		for (size_t i = 1; i < params.size(); ++i) 
+
+		for (size_t i = 1; i < params.size(); ++i)
 		{
 			message += params[i] + ' ';
 			std::cout << "message " << message << "\n";

@@ -246,6 +246,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				user_cmd(client, clientFd, params);
 			if (cmd == "PRIVMSG")
 				privmsg_cmd(clientFd, params);
+			if (cmd == "MSG")
+				msg_cmd(client, clientFd, params);
 			if (cmd == "JOIN")
 				join_cmd(client, clientFd, params);
 			if (cmd == "TOPIC" && params.size() >= 1 && isChannelExist(params.front()))
