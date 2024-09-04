@@ -19,39 +19,40 @@ void Server::start()
 	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_server_fd == -1)
 	{
-		std::cerr << "Failed to create socket! Error: "<< std::endl;
-		exit(0);
+		std::cerr << "Failed to create socket! Error: " << std::endl;
+		exit(1);
 	}
 
-	int flags = fcntl(_server_fd, F_GETFL, 0);
-	if (flags == -1 || fcntl(_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	// Set the server socket to non-blocking mode directly
+	if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) == -1)
 	{
-		std::cerr << "Failed to set non-blocking mode! Error: "<< std::endl;
+		std::cerr << "Failed to set non-blocking mode! Error: " << std::endl;
 		close(_server_fd);
-		exit(0);
+		exit(1);
 	}
 
 	// Specify socket address
-	_serverAddress.sin_family = AF_INET; // IPv4
-	_serverAddress.sin_port = htons(_port); // Convertida p/ a ordem de bytes de rede
-	_serverAddress.sin_addr.s_addr = INADDR_ANY; // Qualquer endereço IP disponível
+	_serverAddress.sin_family = AF_INET;            // IPv4
+	_serverAddress.sin_port = htons(_port);         // Convert to network byte order
+	_serverAddress.sin_addr.s_addr = INADDR_ANY;    // Any available IP address
 
 	if (bind(_server_fd, (sockaddr*)&_serverAddress, sizeof(_serverAddress)) == -1)
 	{
-		std::cerr << "Binding failed! Error: "<< std::endl;
+		std::cerr << "Binding failed! Error: " << std::endl;
 		close(_server_fd);
-		exit(0);
+		exit(1);
 	}
 
 	if (listen(_server_fd, 5) == -1)
 	{
-		std::cerr << "Listening failed! Error: "<< std::endl;
+		std::cerr << "Listening failed! Error: " << std::endl;
 		close(_server_fd);
-		exit(0);
+		exit(1);
 	}
 
-	std::cout << "Server is running and waiting for connections..." << std::endl << std::flush;// std::flush evita que o buffer seja limpo antes de imprimir a mensagem
+	std::cout << "Server is running and waiting for connections..." << std::endl << std::flush;
 }
+
 
 void Server::run()
 {
@@ -131,9 +132,8 @@ void Server::handleNewConnection()
 		return;
 	}
 
-	// Set the new socket to non-blocking mode
-	int flags = fcntl(clientFd, F_GETFL, 0);
-	if (flags == -1 || fcntl(clientFd, F_SETFL, flags | O_NONBLOCK) == -1)
+	// Set the new socket to non-blocking mode directly
+	if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
 	{
 		std::cerr << "Failed to set non-blocking mode for client socket! Error: " << std::endl;
 		close(clientFd);
