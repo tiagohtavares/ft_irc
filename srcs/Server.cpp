@@ -217,7 +217,20 @@ void Server::printParams() const
     }
 }
 
+bool Server::isNicknameInUse(const std::string &nick) const
+{
+    // Explicit iterator type for the map
+    std::map<int, Client>::const_iterator it;
 
+    for (it = _mapClients.begin(); it != _mapClients.end(); ++it)
+	{
+        if (it->second.getNickName() == nick)
+		{
+            return true;
+        }
+    }
+    return false;
+}
 
 void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std::string> params)
 {

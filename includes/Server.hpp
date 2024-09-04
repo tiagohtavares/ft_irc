@@ -57,7 +57,7 @@ class Server
 		void	cleanupClient(int clientFd);
 		void	splitCmdLine(std::string input);
 		void 	printParams() const;
-
+		bool 	isNicknameInUse(const std::string &nick) const;
 
 
 
