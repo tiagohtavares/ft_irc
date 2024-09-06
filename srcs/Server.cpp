@@ -259,7 +259,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				user_cmd(client, clientFd, params);
 			if (cmd == "PRIVMSG")
 				privmsg_cmd(clientFd, params);
-			if (cmd == "MSG")
+			if (cmd == "MSG")	// This command is pointless i think.
 				msg_cmd(client, clientFd, params);
 			if (cmd == "JOIN")
 				join_cmd(client, clientFd, params);
@@ -281,7 +281,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			else
 			{
 				if (cmd == "QUIT")
-					quit_cmd();
+					quit_cmd(clientFd);
 			}
 		}
 	}

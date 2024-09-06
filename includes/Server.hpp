@@ -69,7 +69,7 @@ class Server
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	topic_cmd(int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		void	quit_cmd();
+		void	quit_cmd(int clientFd);
 
 		Client* findClientByNickname(const std::string& nickname, int operatorFd);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);

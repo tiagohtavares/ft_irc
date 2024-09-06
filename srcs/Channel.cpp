@@ -251,7 +251,7 @@ void	Channel::removeMember(std::string nickname)
 			_members.erase(it);
 			std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
 			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
-			
+
 			for (it = _members.begin(); it != _members.end(); it++)
 			{
 				std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
@@ -372,3 +372,16 @@ void	Channel::invitedList() const
 	}
 }
 
+void Channel::broadcastMessage(int senderFd, const std::string &message)
+{
+    for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        int memberFd = it->first;
+
+        // Skip the sender of the message
+        if (memberFd != senderFd)
+        {
+            send(memberFd, message.c_str(), message.size(), 0);
+        }
+    }
+}
