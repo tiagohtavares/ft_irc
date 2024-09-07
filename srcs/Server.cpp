@@ -267,7 +267,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				topic_cmd(client, clientFd, params);
 			else if (cmd == "PART")
 				part_cmd(client, clientFd, params);
-			else if (cmd == "KICK") // /kick <canal> <usuário> [<comentário>]
+			else if (cmd == "KICK")
 				kick_cmd(client, clientFd, params);
 			else if (cmd == "MODE") // /mode <your_nickname> +/-<mode>
 				mode_cmd(client, clientFd, params);

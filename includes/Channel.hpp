@@ -18,10 +18,11 @@ class Channel
 
 		void			setChannelName(std::string &channelName);
 		void			setTopic(std::string &topic);
+
 		void			setPassword(std::string &password);
 		void			setOperator(Client &client);
 		void			setInvitedMode(bool inviteOnly);
-		void			setTopicMode(bool inviteOnly);
+		void			setTopicMode(bool operatorOnly);
 		void			setPasswordMode(bool inviteOnly);
 		void			setOperatorMode(bool inviteOnly);
 		void			setLimitMode(bool inviteOnly);

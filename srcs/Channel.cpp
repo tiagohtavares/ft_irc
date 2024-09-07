@@ -11,7 +11,7 @@ Channel::Channel(std::string &channelName, Client &client)
 {
 	setChannelName(channelName);
 	setInvitedMode(false);
-	setTopicMode(false);
+	setTopicMode(true);
 	setPasswordMode(false);
 	setOperatorMode(false);
 	setLimitMode(false);

@@ -76,4 +76,7 @@ class Server
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
 
 		void mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
+
+
+		void mode_topic(Client &client, int clientFd, std::vector<std::string> params);
 };

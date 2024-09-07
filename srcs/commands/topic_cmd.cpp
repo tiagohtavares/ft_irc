@@ -1,6 +1,5 @@
 #include "../../includes/Server.hpp"
 
-
 void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
 	std::string channelName = params[0];
@@ -15,7 +14,7 @@ void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> pa
 			send(clientFd, topicMessage.c_str(), topicMessage.size(), 0);
 		} 
 
-		else if (channel.isOperator(client))
+		else if (channel.isOperator(client) || channel.getTopicMode() == false)
 		{
 			if (params.size() == 0) 
 			{
