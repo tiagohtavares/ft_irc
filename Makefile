@@ -34,6 +34,8 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/commands/kick_cmd.cpp \
 				./srcs/commands/names_cmd.cpp \
 				./srcs/commands/msg_cmd.cpp \
+				./srcs/commands/mode_cmd.cpp \
+
 
 
 OBJS		:=	$(SRCS:.cpp=.o)

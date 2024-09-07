@@ -332,7 +332,7 @@ bool	Channel::isInvited(const Client& client) const
 void Channel::memberList(int clientFd) const
 {
 	std::map<int, Client*>::const_iterator itOps = _operators.begin();
-	while (itOps != _operators.end())
+	while (itOps != _operators.end() && itOps->second->getModeInvisible() == false)
 	{
 		const std::string operatos = "@" + itOps->second->getNickName() + "\n";
 		send(clientFd, operatos.c_str(), operatos.size(), 0);
@@ -341,7 +341,7 @@ void Channel::memberList(int clientFd) const
 	std::map<int, Client*>::const_iterator it = _members.begin();
 	while (it != _members.end())
 	{
-		if (_operators.find(it->first) == _operators.end())
+		if (_operators.find(it->first) == _operators.end() && it->second->getModeInvisible() == false)
 		{
 			const std::string members = it->second->getNickName() + "\n";
 			send(clientFd, members.c_str(), members.size(), 0);

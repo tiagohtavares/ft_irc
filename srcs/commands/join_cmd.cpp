@@ -1,5 +1,6 @@
 #include "../../includes/Server.hpp"
 
+
 void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
 	if ((params.size() == 1) && (params.front().size() == 1) && ((params.front()[0] == '#') || (params.front()[0] == '&')))
@@ -34,6 +35,8 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 				}
 				else
 				{
+					const std::string Message = "Welcome to the channel " + _channels[params.front()].getChannelName() + "\n";
+					send(client.getClientFd(), Message.c_str(), Message.size(), 0);
 					_channels[params.front()].insertMember(client);
 				}
 			}

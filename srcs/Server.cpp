@@ -255,40 +255,42 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 		{
 			if (cmd == "NICK")
 				nick_cmd(client, clientFd, params);
-			if (cmd == "USER" && client.getUserName().empty())
+			else if (cmd == "USER" && client.getUserName().empty())
 				user_cmd(client, clientFd, params);
-			if (cmd == "PRIVMSG")
+			else if (cmd == "PRIVMSG")
 				privmsg_cmd(clientFd, params);
-			if (cmd == "MSG")	// This command is pointless i think.
+			else if (cmd == "MSG")	// This command is pointless i think.
 				msg_cmd(client, clientFd, params);
-			if (cmd == "JOIN")
+			else if (cmd == "JOIN")
 				join_cmd(client, clientFd, params);
-			if (cmd == "TOPIC" && params.size() >= 1 && isChannelExist(params.front()))
-				topic_cmd(clientFd, params);
-			if (cmd == "PART")
+			else if (cmd == "TOPIC" && params.size() >= 1)
+				topic_cmd(client, clientFd, params);
+			else if (cmd == "PART")
 				part_cmd(client, clientFd, params);
-			if (cmd == "KICK") // Parâmetros: <canal> <usuário> [<comentário>]
+			else if (cmd == "KICK") // /kick <canal> <usuário> [<comentário>]
 				kick_cmd(client, clientFd, params);
+			else if (cmd == "MODE") // /mode <your_nickname> +/-<mode>
+				mode_cmd(client, clientFd, params);
 			else if (cmd == "LIST")
-			{
 				listChannels(client);
-			}
 			else if (cmd == "NAMES")
-			{
 				names_cmd(clientFd, params);
-			}
-			else if (cmd.empty() && params.empty()){return;}
+			else if(cmd == "QUIT")
+				quit_cmd(clientFd);
+			else if (cmd.empty() && params.empty())
+				return;
 			else
 			{
-				if (cmd == "QUIT")
-					quit_cmd(clientFd);
+				if(cmd != "PASS")
+				{
+					send(clientFd, cmd.c_str(), cmd.size(), 0);
+					const std::string Message = ": invalid command\n";
+					send(clientFd, Message.c_str(), Message.size(), 0);
+				}
 			}
 		}
 	}
 }
-
-
-
 
 
 void Server::cleanupClient(int clientFd) {
@@ -372,43 +374,4 @@ void	Server::listChannels(Client &client)
 		channelList += it->first + "\n";
 	}
 	send(client.getClientFd(), channelList.c_str(), channelList.size(), 0);
-}
-
-
-
-
-
-
-
-
-Client* Server::findClientByNickname(const std::string& nickname, int operatorFd)
-{
-
-    std::map<int, Client>::iterator it;
-    Client* result;
-
-    for (it = _mapClients.begin(); it != _mapClients.end(); ++it)
-    {
-        Client &client = it->second;
-        std::cout << "Checking client: " << client.getNickName() << std::endl; // Imprime todos os nicknames encontrados
-
-        if (client.getClientFd() == operatorFd){continue;}
-
-        if (client.getNickName() == nickname)
-        {
-            result = &client;
-            break;
-        }
-    }
-
-    if (result != NULL)
-	{
-        std::cout << "Client found: " << result->getNickName() << " with FD: " << result->getClientFd() << std::endl;
-	} else
-	{
-        std::cout << "Client with nickname '" << nickname << "' not found or is the operator of the channel." << std::endl;
-		return(NULL);
-	}
-
-    return result;
 }

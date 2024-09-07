@@ -28,6 +28,7 @@ class Client
 		std::string	getUserName() const;
 		std::string	getRealName() const;
 		bool		getAuthenticated() const;
+		bool 		getModeInvisible() const;
 
 		// setters
 		void		setClientFd(int clientFd);
@@ -35,6 +36,7 @@ class Client
 		void		setAuthenticated(bool authenticated);
 		void		setUserName(const std::string &userName);
 		void		setRealName(const std::string &realName);
+		void 		setModeInvisible(bool modeInvisible);
 
 
 	private:
@@ -43,6 +45,7 @@ class Client
 		std::string	_nickName;
 		std::string	_realName;
 		bool		_authenticated;
+		bool		_modeInvisible;
 };
 
 #endif
