@@ -120,7 +120,6 @@ void Server::run()
     }
 }
 
-
 void Server::handleNewConnection()
 {
 	Client		client;

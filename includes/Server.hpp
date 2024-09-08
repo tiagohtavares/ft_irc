@@ -7,9 +7,10 @@
 # include <fcntl.h>
 # include <sys/select.h>
 # include <cstdlib>
-# include <poll.h>
+# include <poll.h> 		
 # include <map>
 #include <queue>
+#include <cerrno>       
 
 # include <set>
 
@@ -75,6 +76,7 @@ class Server
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		Client* findClientByNickname(const std::string &nickname);
+		std::string buildWelcomeMessage(Channel &channel); 
 
 		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
 

@@ -70,11 +70,8 @@ class Channel
 		std::string					_channelName;
 		std::string					_topic;
 		std::string					_password;
-		// std::map<int, std::string>	_nicknames;
 		std::map<int, Client*>		_members;
-		// std::set<int>				_members;
 		std::map<int, Client*>		_operators;
-		// std::set<int>				_operators;
 		std::set<int>				_banned;
 		std::set<int>				_invited;
 		bool						_inviteMode;// MODE +i (true) or -i (false)

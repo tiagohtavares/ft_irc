@@ -46,3 +46,35 @@ void Server::kick_cmd(Client &client, int clientFd, std::vector<std::string> par
 		return;
 	}
 }
+
+// 3.2.8 Comando de chute
+
+//       Comando: KICK
+//    Parâmetros: <canal> *( "," <canal> ) <usuário> *( "," <usuário> )
+//                [<comentário>]
+
+//    O comando KICK pode ser usado para solicitar a remoção forçada de um usuário
+//    de um canal. Isso faz com que o <usuário> SEPARE do <canal> por
+//    força. Para que a mensagem seja sintaticamente correta, DEVE haver
+//    um parâmetro de canal e vários parâmetros de usuário, ou tantos
+//    parâmetros do canal, pois há parâmetros do usuário. Se um "comentário" for
+//    dado, isso será enviado em vez da mensagem padrão, o apelido
+//    do usuário que emite o KICK.
+
+//    O servidor NÃO DEVE enviar mensagens KICK com múltiplos canais ou
+//    usuários para clientes. Isso é necessariamente para manter o retrocesso
+//    compatibilidade com software cliente antigo.
+
+//  Examples:
+
+//    KICK &Melbourne Matthew         ; Command to kick Matthew from
+//                                    &Melbourne
+
+//    KICK #Finnish John :Speaking English
+//                                    ; Command to kick John from #Finnish
+//                                    using "Speaking English" as the
+//                                    reason (comment).
+
+//    :WiZ!jto@tolsun.oulu.fi KICK #Finnish John
+//                                    ; KICK message on channel #Finnish
+                                //    from WiZ to remove John from channel
