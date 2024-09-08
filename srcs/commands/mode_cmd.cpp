@@ -67,7 +67,7 @@ void Server::mode_cmd(Client &client, int clientFd, std::vector<std::string> par
 		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 		return;
 	}
-	if (params[0] == client.getNickName())
+	else if (params[0] == client.getNickName())
 	{
 		if(params[1] == "+t" || params[1] == "-t") 
 			mode_topic(client, clientFd, params);

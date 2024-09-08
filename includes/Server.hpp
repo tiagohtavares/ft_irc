@@ -68,14 +68,15 @@ class Server
 		void	privmsg_cmd(int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		// void	topic_cmd(int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	quit_cmd(int clientFd);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	names_cmd(int clientFd, std::vector<std::string> params);
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
+		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		Client* findClientByNickname(const std::string &nickname);
 
-		void mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
 
 
 		void mode_topic(Client &client, int clientFd, std::vector<std::string> params);

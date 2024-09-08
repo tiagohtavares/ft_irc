@@ -259,7 +259,9 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				user_cmd(client, clientFd, params);
 			else if (cmd == "PRIVMSG")
 				privmsg_cmd(clientFd, params);
-			else if (cmd == "MSG")	// This command is pointless i think.
+			else if (cmd == "INVITE") //INVITE <nickname> <channel>
+				invite_cmd(client, clientFd, params);
+			else if (cmd == "MSG")	
 				msg_cmd(client, clientFd, params);
 			else if (cmd == "JOIN")
 				join_cmd(client, clientFd, params);
@@ -269,7 +271,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				part_cmd(client, clientFd, params);
 			else if (cmd == "KICK")
 				kick_cmd(client, clientFd, params);
-			else if (cmd == "MODE") // /mode <your_nickname> +/-<mode>
+			else if (cmd == "MODE") // /MODE <nickname> +/-<mode> <channel_name>
 				mode_cmd(client, clientFd, params);
 			else if (cmd == "LIST")
 				listChannels(client);
