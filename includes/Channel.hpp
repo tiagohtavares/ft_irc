@@ -65,7 +65,10 @@ class Channel
 		void			bannedList() const;
 		void			invitedList() const;
 
+		bool			isPasswordProtected() const;
+
 		void			broadcastMessage(int senderFd, const std::string &message);
+		
 	private:
 		std::string					_channelName;
 		std::string					_topic;

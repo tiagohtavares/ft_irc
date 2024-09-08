@@ -78,6 +78,8 @@ class Server
 		Client* findClientByNickname(const std::string &nickname);
 		std::string buildWelcomeMessage(Channel &channel); 
 
+		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
+
 		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
 
 

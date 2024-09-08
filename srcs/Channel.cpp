@@ -291,6 +291,12 @@ void	Channel::removeInvited(Client &client)
 /*									True or False									*/
 /************************************************************************************/
 
+bool Channel::isPasswordProtected() const 
+{
+    return !_password.empty();
+}
+
+
 bool	Channel::isOperator(const Client& client) const
 {
 	return _operators.find(client.getClientFd()) != _operators.end();

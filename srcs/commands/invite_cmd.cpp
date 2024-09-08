@@ -63,8 +63,8 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
         // Enviar convite para o usuário convidado
         std::string inviteMessage = "You have been invited to join the channel " + channelName + " by " + client.getNickName() + ".\n";
         send(targetClient->getClientFd(), inviteMessage.c_str(), inviteMessage.size(), 0);
-        buildWelcomeMessage(channel); 
         _channels[params[1]].insertMember(*targetClient);
+        buildWelcomeMessage(channel); 
 
         // Notificar o cliente que o convite foi enviado
         std::string successMessage = "Invitation sent to " + targetNickname + " for channel " + channelName + ".\n";
