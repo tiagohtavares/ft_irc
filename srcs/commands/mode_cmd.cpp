@@ -2,15 +2,13 @@
 
 void Server::mode_topic(Client &client, int clientFd, std::vector<std::string> params)
 {
-    // Verifica se há pelo menos 3 parâmetros (nickname, modo e nome do canal)
-    if (params.size() != 3)
-    {
-        std::string errorMessage = "Error: Not enough parameters for MODE command. Usage: /MODE <nickname> +/-t <channel_name>\n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-        return;
-    }
-
-    std::string channelName = params[2];
+	if (params.size() != 2)
+	{
+		std::string errorMessage = "Error: Not enough parameters for MODE command. Usage: /MODE <channel_name> +/-t \n";
+		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+		return;
+	}
+    std::string channelName = params[0];
     std::map<std::string, Channel>::iterator it = _channels.find(channelName);
 
     // Verifica se o canal existe
@@ -21,14 +19,14 @@ void Server::mode_topic(Client &client, int clientFd, std::vector<std::string> p
         return;
     }
 
-	if (params[0] != client.getNickName())
-    {
-		std::string Message = client.getNickName();
-        send(clientFd, Message.c_str(), Message.size(), 0);
-        std::string errorMessage = "\nError: invalid nickname.\n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-        return;
-    }
+	// if (params[0] != client.getNickName())
+    // {
+	// 	std::string Message = client.getNickName();
+    //     send(clientFd, Message.c_str(), Message.size(), 0);
+    //     std::string errorMessage = "\nError: invalid nickname.\n";
+    //     send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+    //     return;
+    // }
 
 	Channel &channel = it->second;
 	if (channel.isOperator(client))
@@ -205,18 +203,10 @@ void	Server::mode_limit(Client &client, int clientFd, std::vector<std::string> p
 
 void Server::mode_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
-	// if (params.size() != 3)
-	// {
-	// 	std::string errorMessage = "Error: Not enough parameters for MODE command. Usage: /MODE <your_nickname> +/-<mode> #channel \n";
-	// 	send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-	// 	return;
-	// }
-	// else if (params[0] == client.getNickName())
-	// {
-	// 	if(params[1] == "+t" || params[1] == "-t")
-	// 		mode_topic(client, clientFd, params);
-	// }
-	if(params[1] == "+i" || params[1] == "-i")
+	
+	if (params[1] == "+t" || params[1] == "-t")
+		mode_topic(client, clientFd, params);
+	else if (params[1] == "+i" || params[1] == "-i")
 		mode_invite_only(client, clientFd, params);
 	else if(params[1] == "+k" || params[1] == "-k")
 		mode_password(client, clientFd, params);

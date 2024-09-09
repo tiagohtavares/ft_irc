@@ -25,7 +25,7 @@ void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> para
 		{
 				if (memberIt->first != clientFd)
 				{
-					std::string message = client.getNickName() + ": ";
+					std::string message =   "[" + channel.getChannelName() + "] " + client.getNickName() + ": ";
 					for (size_t i = 1; i < params.size(); ++i)
 					{
 						message += params[i];
