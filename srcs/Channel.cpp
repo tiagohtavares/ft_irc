@@ -47,6 +47,11 @@ void	Channel::setPassword(std::string &password)
 	_password = password;
 }
 
+void	Channel::setLimit(unsigned int limit)
+{
+	_limit = limit;
+}
+
 void	Channel::setOperator(Client &client)
 {
 	if (_members.find(client.getClientFd()) != _members.end() && _operators.find(client.getClientFd()) == _operators.end() && _banned.find(client.getClientFd()) == _banned.end())
@@ -66,10 +71,12 @@ void	Channel::setBanned(Client &client)
 
 void	Channel::setInvited(Client &client)
 {
-	if (_members.find(client.getClientFd()) != _members.end() && _invited.find(client.getClientFd()) == _invited.end())
-	{
-		_invited.insert(client.getClientFd());
-	}
+	std::cout << "setInvited called" << std::endl;
+	if (_banned.find(client.getClientFd()) == _banned.end() && _invited.find(client.getClientFd()) == _invited.end())
+		{
+			std::cout << "setInvited 1: " << client.getNickName() << std::endl;
+			_invited.insert(client.getClientFd());
+		}
 }
 
 void	Channel::setInvitedMode(bool status)
@@ -120,8 +127,12 @@ std::string	Channel::getTopic() const
 
 std::string	Channel::getPassword() const
 {
-
 	return _password;
+}
+
+unsigned int	Channel::getLimit() const
+{
+	return _limit;
 }
 
 Client*	Channel::getMember(std::string nickname) const
@@ -291,7 +302,7 @@ void	Channel::removeInvited(Client &client)
 /*									True or False									*/
 /************************************************************************************/
 
-bool Channel::isPasswordProtected() const 
+bool Channel::isPasswordProtected() const
 {
     return !_password.empty();
 }
@@ -304,7 +315,16 @@ bool	Channel::isOperator(const Client& client) const
 
 bool	Channel::isMember(const Client& client) const
 {
-	return _members.find(client.getClientFd()) != _members.end();
+	std::map<int, Client*>::const_iterator it = _members.begin();
+	while (it != _members.end())
+	{
+		if (it->second->getNickName() == client.getNickName())
+		{
+			return true;
+		}
+		it++;
+	}
+	return false;
 }
 
 bool	Channel::isMember(std::string nickname) const
@@ -328,7 +348,18 @@ bool	Channel::isBanned(const Client& client) const
 
 bool	Channel::isInvited(const Client& client) const
 {
-	return _invited.find(client.getClientFd()) != _invited.end();
+	std::set<int>::const_iterator it = _invited.begin();
+	while (it != _invited.end())
+	{
+		if (*it == client.getClientFd())
+		{
+			std::cout << "isInvited: TRUE: " << *it << std::endl;
+			return true;
+		}
+		it++;
+	}
+	std::cout << "isInvited: FALSE" << std::endl;
+	return false;
 }
 
 /************************************************************************************/

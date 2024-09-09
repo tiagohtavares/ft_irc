@@ -7,10 +7,10 @@
 # include <fcntl.h>
 # include <sys/select.h>
 # include <cstdlib>
-# include <poll.h> 		
+# include <poll.h>
 # include <map>
 #include <queue>
-#include <cerrno>       
+#include <cerrno>
 
 # include <set>
 
@@ -36,7 +36,9 @@ class Server
 
 		void	start();
 
+		// Client management
 		std::map<int, Client> _mapClients;
+
 
 		// Channel management
 		std::map<std::string, Channel>	_channels;
@@ -76,7 +78,7 @@ class Server
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		Client* findClientByNickname(const std::string &nickname);
-		std::string buildWelcomeMessage(Channel &channel); 
+		std::string buildWelcomeMessage(Channel &channel);
 
 		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
 
@@ -84,4 +86,8 @@ class Server
 
 
 		void mode_topic(Client &client, int clientFd, std::vector<std::string> params);
+		void mode_invite_only(Client &client, int clientFd, std::vector<std::string> params);
+		void mode_password(Client &client, int clientFd, std::vector<std::string> params);
+		// void mode_operator(Client &client, int clientFd, std::vector<std::string> params);
+		void mode_limit(Client &client, int clientFd, std::vector<std::string> params);
 };

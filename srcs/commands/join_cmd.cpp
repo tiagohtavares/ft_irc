@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 
-std::string Server::buildWelcomeMessage(Channel &channel) 
+std::string Server::buildWelcomeMessage(Channel &channel)
 {
     // Construir a mensagem de boas-vindas
     std::string welcomeMessage = "Welcome to the channel " + channel.getChannelName() + "!\n";
@@ -10,10 +10,10 @@ std::string Server::buildWelcomeMessage(Channel &channel)
 
     // Adicionar a lista de membros
     std::string membersList = "Channel Members: ";
-    std::map<int, Client*> members = channel.getMembers(); 
+    std::map<int, Client*> members = channel.getMembers();
 
-    for (std::map<int, Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt) 
-	{    
+    for (std::map<int, Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt)
+	{
         Client* memberClient = memberIt->second;// Encontrar o nome do membro usando o descritor de arquivo
         if (memberClient) {
             membersList += memberClient->getNickName() + ", ";
@@ -60,9 +60,74 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 				}
 				else
 				{
-					_channels[params.front()].insertMember(client);
-					std::string msg = buildWelcomeMessage(channel);
-					send(clientFd, msg.c_str(), msg.size(), 0);
+					// Handle the case where the channel is invite-only mode
+					if (_channels[channelName].getInviteMode() == true)
+					{
+						if (!_channels[channelName].isInvited(client))
+						{
+							const std::string message = "You need to be invited to join this channel.\n";
+							send(clientFd, message.c_str(), message.size(), 0);
+							return;
+						}
+						else
+						{
+							// Handle the case where the channel have a limit of members
+							if (_channels[channelName].getLimitMode() == true)
+							{
+								if (_channels[channelName].getMembers().size() >= _channels[channelName].getLimit())
+								{
+									const std::string message = "The channel is full. You cannot join.\n";
+									send(clientFd, message.c_str(), message.size(), 0);
+									return;
+								}
+								else
+								{
+									_channels[channelName].insertMember(client);
+									std::string msg = buildWelcomeMessage(channel);
+									send(clientFd, msg.c_str(), msg.size(), 0);
+								}
+							}
+							else
+							{
+								_channels[channelName].insertMember(client);
+								std::string msg = buildWelcomeMessage(channel);
+								send(clientFd, msg.c_str(), msg.size(), 0);
+							}
+						}
+					}
+					else
+					{
+						// Handle the case where the channel is password-protected
+						if (_channels[channelName].getPasswordMode() == true)
+						{
+							const std::string message = "This channel is password-protected. Please enter the password. Please use /JOIN <#channel_name> <channel_password>\n";
+							send(clientFd, message.c_str(), message.size(), 0);
+						}
+						else
+						{
+							if (_channels[channelName].getLimitMode() == true)
+							{
+								if (_channels[channelName].getMembers().size() >= _channels[channelName].getLimit())
+								{
+									const std::string message = "The channel is full. You cannot join.\n";
+									send(clientFd, message.c_str(), message.size(), 0);
+									return;
+								}
+								else
+								{
+									_channels[channelName].insertMember(client);
+									std::string msg = buildWelcomeMessage(channel);
+									send(clientFd, msg.c_str(), msg.size(), 0);
+								}
+							}
+							else
+							{
+								_channels[channelName].insertMember(client);
+								std::string msg = buildWelcomeMessage(channel);
+								send(clientFd, msg.c_str(), msg.size(), 0);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -71,6 +136,74 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 			createChannel(params.front(), client);
 		}
 		params.pop_back();
+	}
+
+	// JOIN #channel_name channel_password
+	else if ((params.size() == 2) && (params[0].size() == 1) && ((params[0][0] == '#') || (params[0][0] == '&')))
+	{
+		const std::string message = "/JOIN <#channel_name> <channel_password>\n";
+		send(clientFd, message.c_str(), message.size(), 0);
+	}
+	else if (params.size() == 2 && params[0].size() > 1 && ((params[0][0] == '#' && params[0][1] == '#') ||
+	(params[0][0] == '&' && params[0][1] == '&')))
+	{
+		const std::string message = "The channel name cannot start with # or &.\n";
+		send(clientFd, message.c_str(), message.size(), 0);
+	}
+	else if (params.size() == 2 && params[0].size() > 1 && (params[0][0] == '#' || params[0][0] == '&'))
+	{
+		if (params[0].size() > 51)
+		{
+			const std::string message = "The channel name cannot exceed 50 characters.\n";
+			send(clientFd, message.c_str(), message.size(), 0);
+			return;
+		}
+		if (isChannelExist(params[0]))
+		{
+			std::map<std::string, Channel>::iterator it = _channels.find(params[0]);
+			if (it !=_channels.end())
+			{
+				if (params[1]  == _channels[params[0]].getPassword())
+				{
+					// Handle the case where the channel have a limit of members
+					if (_channels[params[0]].getLimitMode() == true)
+					{
+						if (_channels[params[0]].getMembers().size() >= _channels[params[0]].getLimit())
+						{
+							const std::string message = "The channel is full. You cannot join.\n";
+							send(clientFd, message.c_str(), message.size(), 0);
+							return;
+						}
+						else
+						{
+							_channels[params[0]].insertMember(client);
+							std::string msg = buildWelcomeMessage(it->second);
+							send(clientFd, msg.c_str(), msg.size(), 0);
+						}
+					}
+					else
+					{
+						_channels[params[0]].insertMember(client);
+						std::string msg = buildWelcomeMessage(it->second);
+						send(clientFd, msg.c_str(), msg.size(), 0);
+					}
+				}
+				else
+				{
+					const std::string message = "Invalid password.\n";
+					send(clientFd, message.c_str(), message.size(), 0);
+				}
+			}
+		}
+		else
+		{
+			// join #canal pwd
+			createChannel(params.front(), client);
+			_channels[params[0]].setPasswordMode(true);
+			_channels[params[0]].setPassword(params[1]);
+		}
+		while (params.size() > 0)
+			params.pop_back();
 	}
 	else
 	{
@@ -100,7 +233,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 // 	else if ((params.size() == 1 || params.size() == 2) && params.front().size() > 1 && (params.front()[0] == '#' || params.front()[0] == '&'))
 // 	{
 // 		std::string channelName = params.front();
-		
+
 // 		if (channelName.size() > 51)
 // 		{
 // 			const std::string message = "The channel name cannot exceed 50 characters.\n";
@@ -108,7 +241,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 // 			return;
 // 		}
 
-// 		if (isChannelExist(channelName) && params.size() == 1) // Entrar SEM senha no canal 
+// 		if (isChannelExist(channelName) && params.size() == 1) // Entrar SEM senha no canal
 // 		{
 // 			std::string channelName = channelName;
 // 			std::map<std::string, Channel>::iterator it = _channels.find(channelName);
@@ -129,11 +262,11 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 // 						send(clientFd, msg.c_str(), msg.size(), 0);
 // 						_channels[channelName].insertMember(client);
 // 					}
-					
+
 // 				}
 // 			}
 // 		}
-// 		else if (isChannelExist(channelName) && params.size() == 2) // Entrar com senha no canal 
+// 		else if (isChannelExist(channelName) && params.size() == 2) // Entrar com senha no canal
 // 		{
 // 			std::map<std::string, Channel>::iterator it = _channels.find(channelName);
 // 			if (it !=_channels.end())
@@ -146,7 +279,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 // 					send(clientFd, msg.c_str(), msg.size(), 0);
 // 					_channels[channelName].insertMember(client);
 // 				}
-// 			}	
+// 			}
 // 		}
 // 		else
 // 		{
@@ -160,7 +293,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 // 					createChannel(channelName, client);
 // 				}
 // 			}
-// 			else if(params.size() == 1) 
+// 			else if(params.size() == 1)
 // 				createChannel(channelName, client);
 // 		}
 // 		params.pop_back();

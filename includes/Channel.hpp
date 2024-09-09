@@ -18,14 +18,14 @@ class Channel
 
 		void			setChannelName(std::string &channelName);
 		void			setTopic(std::string &topic);
-
 		void			setPassword(std::string &password);
+		void			setLimit(unsigned int limit);
 		void			setOperator(Client &client);
-		void			setInvitedMode(bool inviteOnly);
-		void			setTopicMode(bool operatorOnly);
-		void			setPasswordMode(bool inviteOnly);
-		void			setOperatorMode(bool inviteOnly);
-		void			setLimitMode(bool inviteOnly);
+		void			setInvitedMode(bool status);
+		void			setTopicMode(bool status);
+		void			setPasswordMode(bool status);
+		void			setOperatorMode(bool status);
+		void			setLimitMode(bool status);
 
 		void			setBanned(Client &client);
 		void			setInvited(Client &client);
@@ -33,6 +33,7 @@ class Channel
 		std::string		getChannelName() const;
 		std::string		getTopic() const;
 		std::string		getPassword() const;
+		unsigned int	getLimit() const;
 		Client*			getMember(std::string nickname) const;
 		std::map<int, Client*>	getMembers() const;
 		std::map<int, Client*>	getOperators() const;
@@ -68,16 +69,17 @@ class Channel
 		bool			isPasswordProtected() const;
 
 		void			broadcastMessage(int senderFd, const std::string &message);
-		
+
 	private:
 		std::string					_channelName;
 		std::string					_topic;
 		std::string					_password;
+		unsigned int				_limit;
 		std::map<int, Client*>		_members;
 		std::map<int, Client*>		_operators;
 		std::set<int>				_banned;
 		std::set<int>				_invited;
-		bool						_inviteMode;// MODE +i (true) or -i (false)
+		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
 		bool						_topicMode;// MODE +t (true) or -t (false)
 		bool						_passwordMode;// MODE +k (true) or -k (false)
 		bool						_operatorMode;// MODE +o (true) or -o (false)

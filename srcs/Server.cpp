@@ -260,7 +260,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				privmsg_cmd(clientFd, params);
 			else if (cmd == "INVITE") //INVITE <nickname> <channel>
 				invite_cmd(client, clientFd, params);
-			else if (cmd == "MSG")	
+			else if (cmd == "MSG")
 				msg_cmd(client, clientFd, params);
 			else if (cmd == "JOIN")
 				join_cmd(client, clientFd, params);
