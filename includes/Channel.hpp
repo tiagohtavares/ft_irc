@@ -80,6 +80,7 @@ class Channel
 		std::string					_password;
 		unsigned int				_limit;
 		std::map<int, Client*>		_members;
+		std::map<int, Client*>		_creator;
 		std::map<int, Client*>		_operators;
 		std::map<int, Client*>		_banned;
 		std::set<int>				_invited;
