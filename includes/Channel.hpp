@@ -21,13 +21,14 @@ class Channel
 		void			setPassword(std::string &password);
 		void			setLimit(unsigned int limit);
 		void			setOperator(Client &client);
+		void			setOperator(std::string client);
 		void			setInvitedMode(bool status);
-		void			setTopicMode(bool status);
-		void			setPasswordMode(bool status);
-		void			setOperatorMode(bool status);
 		void			setLimitMode(bool status);
+		void			setOperatorMode(bool status);
+		void			setPasswordMode(bool status);
+		void			setTopicMode(bool status);
 
-		void			setBanned(Client &client);
+		// void			setBanned(Client &client);
 		void			setInvited(Client &client);
 
 		std::string		getChannelName() const;
@@ -37,7 +38,7 @@ class Channel
 		Client*			getMember(std::string nickname) const;
 		std::map<int, Client*>	getMembers() const;
 		std::map<int, Client*>	getOperators() const;
-		std::set<int>	getBanned() const;
+		// std::set<int>	getBanned() const;
 		std::set<int>	getInvited() const;
 		bool			getInviteMode() const;
 		bool			getTopicMode() const;
@@ -47,19 +48,22 @@ class Channel
 
 		void			insertOperator(Client &client);
 		void			insertMember(Client &client);
-		void			insertBanned(Client &client);
+		// void			insertBanned(Client &client);
 		void			insertInvited(Client &client);
 
 		void			removeOperator(Client &client);
+		void			removeOperator(std::string client);
 		void			removeMember(Client &client);
 		void			removeMember(std::string nickname);
 		void			removeBanned(Client &client);
 		void			removeInvited(Client &client);
 
 		bool			isOperator(const Client& client) const;
+		bool			isOperator(std::string nickname) const;
 		bool			isMember(const Client& client) const;
 		bool			isMember(std::string nickname) const;
 		bool			isBanned(const Client& client) const;
+		bool			isBanned(std::string nickname) const;
 		bool			isInvited(const Client& client) const;
 
 		void			memberList(int clientFd) const;
@@ -77,13 +81,13 @@ class Channel
 		unsigned int				_limit;
 		std::map<int, Client*>		_members;
 		std::map<int, Client*>		_operators;
-		std::set<int>				_banned;
+		std::map<int, Client*>		_banned;
 		std::set<int>				_invited;
 		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
-		bool						_topicMode;// MODE +t (true) or -t (false)
-		bool						_passwordMode;// MODE +k (true) or -k (false)
-		bool						_operatorMode;// MODE +o (true) or -o (false)
 		bool						_limitMode;// MODE +l (true) or -l (false)
+		bool						_operatorMode;// MODE +o (true) or -o (false)
+		bool						_passwordMode;// MODE +k (true) or -k (false)
+		bool						_topicMode;// MODE +t (true) or -t (false)
 };
 
 #endif

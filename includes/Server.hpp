@@ -83,11 +83,9 @@ class Server
 		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
 
 		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
-
-
-		void mode_topic(Client &client, int clientFd, std::vector<std::string> params);
-		void mode_invite_only(Client &client, int clientFd, std::vector<std::string> params);
-		void mode_password(Client &client, int clientFd, std::vector<std::string> params);
-		// void mode_operator(Client &client, int clientFd, std::vector<std::string> params);
-		void mode_limit(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_operator(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_topic(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_invite_only(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_password(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_limit(Client &client, int clientFd, std::vector<std::string> params);
 };

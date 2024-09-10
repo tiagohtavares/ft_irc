@@ -1,6 +1,5 @@
 #include "../../includes/Server.hpp"
 
-
 void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const
 {
     if (params.size() < 2)
@@ -19,8 +18,8 @@ void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> para
 		const Channel &channel = channelIt->second;
 		const std::map<int, Client*> &members = channel.getMembers();
 
-		for (std::map<int, Client*>::const_iterator memberIt = members.begin(); 
-			memberIt != members.end(); 
+		for (std::map<int, Client*>::const_iterator memberIt = members.begin();
+			memberIt != members.end();
 			++memberIt)
 		{
 				if (memberIt->first != clientFd)

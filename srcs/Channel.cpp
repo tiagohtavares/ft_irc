@@ -11,10 +11,10 @@ Channel::Channel(std::string &channelName, Client &client)
 {
 	setChannelName(channelName);
 	setInvitedMode(false);
-	setTopicMode(true);
-	setPasswordMode(false);
-	setOperatorMode(false);
 	setLimitMode(false);
+	setOperatorMode(false);
+	setPasswordMode(false);
+	setTopicMode(false);
 	insertMember(client);
 	setOperator(client);
 	const std::string errorMessage = "Channel " + getChannelName() + " created!\n";
@@ -60,14 +60,31 @@ void	Channel::setOperator(Client &client)
 	}
 }
 
-void	Channel::setBanned(Client &client)
+void	Channel::setOperator(std::string client)
 {
-	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
+	if (isMember(client) && !isBanned(client))
 	{
-		// _banned.insert(std::make_pair(client.getClientFd(), &client));
-		_banned.insert(client.getClientFd());
+		std::map<int, Client*>::const_iterator it = _members.begin();
+		while (it != _members.end())
+		{
+			if (it->second->getNickName() == client && _operators.find(it->second->getClientFd()) == _operators.end())
+			{
+				_operators.insert(std::make_pair(it->second->getClientFd(), it->second));
+				break;
+			}
+			it++;
+		}
 	}
 }
+
+// void	Channel::setBanned(Client &client)
+// {
+// 	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
+// 	{
+// 		// _banned.insert(std::make_pair(client.getClientFd(), &client));
+// 		_banned.insert(client.getClientFd());
+// 	}
+// }
 
 void	Channel::setInvited(Client &client)
 {
@@ -159,10 +176,10 @@ std::map<int, Client*>	Channel::getOperators() const
 	return _operators;
 }
 
-std::set<int>	Channel::getBanned() const
-{
-	return _banned;
-}
+// std::set<int>	Channel::getBanned() const
+// {
+// 	return _banned;
+// }
 
 std::set<int>	Channel::getInvited() const
 {
@@ -222,13 +239,13 @@ void	Channel::insertOperator(Client &client)
 	}
 }
 
-void	Channel::insertBanned(Client &client)
-{
-	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
-	{
-		_banned.insert(client.getClientFd());
-	}
-}
+// void	Channel::insertBanned(Client &client)
+// {
+// 	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
+// 	{
+// 		_banned.insert(client.getClientFd(), Client);
+// 	}
+// }
 
 void	Channel::insertInvited(Client &client)
 {
@@ -279,6 +296,28 @@ void	Channel::removeOperator(Client &client)
 	if (_operators.find(client.getClientFd()) != _operators.end())
 	{
 		_operators.erase(client.getClientFd());
+	}
+}
+
+void	Channel::removeOperator(std::string nickname)
+{
+	std::map<int, Client*>::iterator it = _operators.begin();
+	while (it != _operators.end())
+	{
+		if (it->second->getNickName() == nickname)
+		{
+			_operators.erase(it);
+			std::string message = nickname + " had his operator status removed from the " + getChannelName() + ".\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+
+			for (it = _operators.begin(); it != _operators.end(); it++)
+			{
+				std::string message = nickname + " had his operator status removed from the " + getChannelName() + ".\n";
+				send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+			}
+			return ;
+		}
+		it++;
 	}
 }
 
@@ -341,9 +380,37 @@ bool	Channel::isMember(std::string nickname) const
 	return false;
 }
 
+bool	Channel::isOperator(std::string nickname) const
+{
+	std::map<int, Client*>::const_iterator it = _operators.begin();
+	while (it != _operators.end())
+	{
+		if (it->second->getNickName() == nickname)
+		{
+			return true;
+		}
+		it++;
+	}
+	return false;
+}
+
 bool	Channel::isBanned(const Client& client) const
 {
 	return _banned.find(client.getClientFd()) != _banned.end();
+}
+
+bool	Channel::isBanned(std::string nickname) const
+{
+	std::map<int, Client*>::const_iterator it = _banned.begin();
+	while (it != _banned.end())
+	{
+		if (it->second->getNickName() == nickname)
+		{
+			return true;
+		}
+		it++;
+	}
+	return false;
 }
 
 bool	Channel::isInvited(const Client& client) const
@@ -389,15 +456,15 @@ void Channel::memberList(int clientFd) const
 	}
 }
 
-void	Channel::bannedList() const
-{
-	std::set<int>::iterator it = _banned.begin();
-	while (it != _banned.end())
-	{
-		std::cout << "!" << *it << std::endl;
-		it++;
-	}
-}
+// void	Channel::bannedList() const
+// {
+// 	std::set<int>::iterator it = _banned.begin();
+// 	while (it != _banned.end())
+// 	{
+// 		std::cout << "!" << *it << std::endl;
+// 		it++;
+// 	}
+// }
 
 void	Channel::invitedList() const
 {
