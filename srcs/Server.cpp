@@ -274,8 +274,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			{
 				if(cmd != "PASS")
 				{
-					sendMessage(clientFd, cmd); 
-					sendMessage(clientFd, ": invalid command\n"); 
+					sendMessage(clientFd, cmd);
+					sendMessage(clientFd, ": invalid command\n");
 				}
 			}
 		}

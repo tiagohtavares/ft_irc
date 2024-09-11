@@ -1,0 +1,42 @@
+401 ERR_NOSUCHNICK
+              "<nickname> :No such nick/channel"
+
+403    ERR_NOSUCHCHANNEL
+              "<channel name> :No such channel"
+
+         - Used to indicate the given channel name is invalid.
+
+433    ERR_NICKNAMEINUSE
+              "<nick> :Nickname is already in use"
+
+         - Returned when a NICK message is processed that results
+           in an attempt to change to a currently existing
+           nickname.
+
+442    ERR_NOTONCHANNEL
+              "<channel> :You're not on that channel"
+
+         - Returned by the server whenever a client tries to
+           perform a channel affecting command for which the
+           client isn't a member.
+
+461    ERR_NEEDMOREPARAMS
+              "<command> :Not enough parameters"
+
+         - Returned by the server by numerous commands to
+           indicate to the client that it didn't supply enough
+           parameters.
+
+467    ERR_KEYSET
+              "<channel> :Channel key already set"
+
+472    ERR_UNKNOWNMODE
+              "<char> :is unknown mode char to me for <channel>"
+
+482    ERR_CHANOPRIVSNEEDED
+              "<channel> :You're not channel operator"
+
+         - Any command requiring 'chanop' privileges (such as
+           MODE messages) MUST return this error if the client
+           making the attempt is not a chanop on the specified
+           channel.

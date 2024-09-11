@@ -1,13 +1,12 @@
 #include "../../includes/Server.hpp"
 
-void Server::sendMessage(int fd, const std::string& message) 
+void Server::sendMessage(int fd, const std::string& message)
 {
     if (send(fd, message.c_str(), message.size(), 0) == -1)
     {
         std::cerr << "Failed to sendMessage welcome message to client." << std::endl;
     }
 }
-
 
 std::string Server::buildWelcomeMessage(Channel &channel)
 {

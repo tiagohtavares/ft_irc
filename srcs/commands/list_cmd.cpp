@@ -1,13 +1,14 @@
 #include "../../includes/Server.hpp"
 
-#include <sstream>  
+#include <sstream>
 
-std::string intToString(int num) 
+std::string intToString(int num)
 {
     std::stringstream ss;
     ss << num;
     return ss.str();
 }
+
 void Server::listChannels(Client &client)
 {
     std::string channelList;
@@ -27,6 +28,6 @@ void Server::listChannels(Client &client)
 
     // Código 323 - RPL_LISTEND: Indica o fim da lista
     channelList += ":server_name 323 " + client.getNickName() + " :End of /LIST\r\n";
-    
+
     sendMessage(client.getClientFd(), channelList);
 }

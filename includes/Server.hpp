@@ -11,7 +11,7 @@
 # include <map>
 #include <queue>
 #include <cerrno>
-# include <sstream>  
+# include <sstream>
 
 # include <set>
 

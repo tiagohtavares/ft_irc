@@ -1,11 +1,11 @@
 #include "../includes/Client.hpp"
 
-//-------------------------Contrutor 
+//-------------------------Contrutor
 
-Client::Client() : 
-	_clientFd(-1), 
-	_nickName(""), 
-	_authenticated(false), 
+Client::Client() :
+	_clientFd(-1),
+	_nickName(""),
+	_authenticated(false),
 	_modeInvisible(false)
 	{
 	}
@@ -17,7 +17,7 @@ Client::~Client()
 }
 
 
-//-------------------------Getters 
+//-------------------------Getters
 
 int Client::getClientFd() const
 {
