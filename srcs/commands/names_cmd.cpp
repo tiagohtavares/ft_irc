@@ -11,15 +11,11 @@ void	Server::names_cmd(int clientFd, std::vector<std::string> params)
 		}
 		else
 		{
-			const std::string errorMessage = "403 " + params[0] + " :No such channel\n";
-			send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+			sendMessage(clientFd, "403 " + params[0] + " :No such channel\n");
 		}
 	}
 	else
-	{
-		const std::string errorMessage = "461 NAMES :Not enough parameters\n";
-		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-	}
+		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");
 }
 
 // 3.2.5 Mensagem de nomes

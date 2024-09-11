@@ -10,30 +10,18 @@ void	Server::pass_cmd(int clientFd, std::vector<std::string> params)
         if (params.front() == _password)
         {
             _authenticatedClients[clientFd] = true;
-            const std::string welcomeMessage = "Password accepted. You are now connected.\n";
-            if (send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0) == -1)
-            {
-                std::cerr << "Failed to send welcome message to client." << std::endl;
-            }
+            sendMessage(clientFd, "Password accepted. You are now connected.\n");
             std::cout << "Client authenticated." << std::endl;
         }
         else
         {
-            const std::string errorMessage = "Invalid password. Connection will be closed.\n";
-            if (send(clientFd, errorMessage.c_str(), errorMessage.size(), 0) == -1)
-            {
-                std::cerr << "Failed to send error message to client." << std::endl;
-            }
+            sendMessage(clientFd, "Invalid password. Connection will be closed.\n");
             cleanupClient(clientFd);
         }
     }
     else
     {
-        const std::string errorMessage = "Invalid command. Connection will be closed.\n";
-        if (send(clientFd, errorMessage.c_str(), errorMessage.size(), 0) == -1)
-        {
-            std::cerr << "Failed to send error message to client." << std::endl;
-        }
+        sendMessage(clientFd, "Invalid command. Connection will be closed.\n");
         cleanupClient(clientFd);
     }
 }

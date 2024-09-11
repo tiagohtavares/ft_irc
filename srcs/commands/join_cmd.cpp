@@ -1,51 +1,16 @@
 #include "../../includes/Server.hpp"
 
-std::string Server::buildWelcomeMessage(Channel &channel)
-{
-    // Construir a mensagem de boas-vindas
-    std::string welcomeMessage = "Welcome to the channel " + channel.getChannelName() + "!\n";
-
-    // Adicionar o tópico do canal
-    welcomeMessage += "Channel Topic: " + channel.getTopic() + "\n";
-
-    // Adicionar a lista de membros
-    std::string membersList = "Channel Members: ";
-    std::map<int, Client*> members = channel.getMembers();
-
-    for (std::map<int, Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt)
-	{
-        Client* memberClient = memberIt->second;// Encontrar o nome do membro usando o descritor de arquivo
-        if (memberClient) {
-            membersList += memberClient->getNickName() + ", ";
-        }
-    }
-    membersList += "\n";
-    welcomeMessage += membersList;
-    return welcomeMessage;
-}
-
-
-
 void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
 	if ((params.size() == 1) && (params.front().size() == 1) && ((params.front()[0] == '#') || (params.front()[0] == '&')))
-	{
-		const std::string message = "/JOIN <#channel_name>\n";
-		send(clientFd, message.c_str(), message.size(), 0);
-	}
+		sendMessage(clientFd, "/JOIN <#channel_name>\n");
 	else if (params.size() == 1 && params.front().size() > 1 && ((params.front()[0] == '#' && params.front()[1] == '#') ||
 	(params.front()[0] == '&' && params.front()[1] == '&')))
-	{
-		const std::string message = "The channel name cannot start with # or &.\n";
-		send(clientFd, message.c_str(), message.size(), 0);
-	}
+		sendMessage(clientFd, "The channel name cannot start with # or &.\n");
 	else if (params.size() == 1 && params.front().size() > 1 && (params.front()[0] == '#' || params.front()[0] == '&'))
 	{
 		if (params.front().size() > 51)
-		{
-			const std::string message = "The channel name cannot exceed 50 characters.\n";
-			send(clientFd, message.c_str(), message.size(), 0);
-		}
+			sendMessage(clientFd, "The channel name cannot exceed 50 characters.\n");
 		else if (isChannelExist(params.front()))
 		{
 			std::string channelName = params.front();
@@ -55,8 +20,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 				Channel &channel = it->second;
 				if (channel.isMember(client))
 				{
-					const std::string channelTopic = _channels[params.front()].getTopic() + "\n";
-					send(clientFd, channelTopic.c_str(), channelTopic.size(), 0);
+					sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
 				}
 				else
 				{
@@ -65,8 +29,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 					{
 						if (!_channels[channelName].isInvited(client))
 						{
-							const std::string message = "You need to be invited to join this channel.\n";
-							send(clientFd, message.c_str(), message.size(), 0);
+							sendMessage(clientFd, "You need to be invited to join this channel.\n");
 							return;
 						}
 						else
@@ -76,22 +39,19 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 							{
 								if (_channels[channelName].getMembers().size() >= _channels[channelName].getLimit())
 								{
-									const std::string message = "The channel is full. You cannot join.\n";
-									send(clientFd, message.c_str(), message.size(), 0);
+									sendMessage(clientFd, "The channel is full. You cannot join.\n");
 									return;
 								}
 								else
 								{
 									_channels[channelName].insertMember(client);
-									std::string msg = buildWelcomeMessage(channel);
-									send(clientFd, msg.c_str(), msg.size(), 0);
+									sendMessage(clientFd, buildWelcomeMessage(channel));
 								}
 							}
 							else
 							{
 								_channels[channelName].insertMember(client);
-								std::string msg = buildWelcomeMessage(channel);
-								send(clientFd, msg.c_str(), msg.size(), 0);
+								sendMessage(clientFd, buildWelcomeMessage(channel));
 							}
 						}
 					}
@@ -99,32 +59,25 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 					{
 						// Handle the case where the channel is password-protected
 						if (_channels[channelName].getPasswordMode() == true)
-						{
-							const std::string message = "This channel is password-protected. Please enter the password. Please use /JOIN <#channel_name> <channel_password>\n";
-							send(clientFd, message.c_str(), message.size(), 0);
-						}
+							sendMessage(clientFd, "This channel is password-protected. Please enter the password. Please use /JOIN <#channel_name> <channel_password>\n");
 						else
 						{
 							if (_channels[channelName].getLimitMode() == true)
 							{
 								if (_channels[channelName].getMembers().size() >= _channels[channelName].getLimit())
 								{
-									const std::string message = "The channel is full. You cannot join.\n";
-									send(clientFd, message.c_str(), message.size(), 0);
+									sendMessage(clientFd, "The channel is full. You cannot join.\n");
 									return;
 								}
 								else
 								{
-									_channels[channelName].insertMember(client);
-									std::string msg = buildWelcomeMessage(channel);
-									send(clientFd, msg.c_str(), msg.size(), 0);
+									sendMessage(clientFd, buildWelcomeMessage(channel));
 								}
 							}
 							else
 							{
 								_channels[channelName].insertMember(client);
-								std::string msg = buildWelcomeMessage(channel);
-								send(clientFd, msg.c_str(), msg.size(), 0);
+								sendMessage(clientFd, buildWelcomeMessage(channel));
 							}
 						}
 					}
@@ -140,22 +93,15 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 
 	// JOIN #channel_name channel_password
 	else if ((params.size() == 2) && (params[0].size() == 1) && ((params[0][0] == '#') || (params[0][0] == '&')))
-	{
-		const std::string message = "/JOIN <#channel_name> <channel_password>\n";
-		send(clientFd, message.c_str(), message.size(), 0);
-	}
+		sendMessage(clientFd, "/JOIN <#channel_name> <channel_password>\n");
 	else if (params.size() == 2 && params[0].size() > 1 && ((params[0][0] == '#' && params[0][1] == '#') ||
 	(params[0][0] == '&' && params[0][1] == '&')))
-	{
-		const std::string message = "The channel name cannot start with # or &.\n";
-		send(clientFd, message.c_str(), message.size(), 0);
-	}
+		sendMessage(clientFd, "The channel name cannot start with # or &.\n");
 	else if (params.size() == 2 && params[0].size() > 1 && (params[0][0] == '#' || params[0][0] == '&'))
 	{
 		if (params[0].size() > 51)
 		{
-			const std::string message = "The channel name cannot exceed 50 characters.\n";
-			send(clientFd, message.c_str(), message.size(), 0);
+			sendMessage(clientFd, "The channel name cannot exceed 50 characters.\n");
 			return;
 		}
 		if (isChannelExist(params[0]))
@@ -170,28 +116,24 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 					{
 						if (_channels[params[0]].getMembers().size() >= _channels[params[0]].getLimit())
 						{
-							const std::string message = "The channel is full. You cannot join.\n";
-							send(clientFd, message.c_str(), message.size(), 0);
+							sendMessage(clientFd, "The channel is full. You cannot join.\n");
 							return;
 						}
 						else
 						{
 							_channels[params[0]].insertMember(client);
-							std::string msg = buildWelcomeMessage(it->second);
-							send(clientFd, msg.c_str(), msg.size(), 0);
+							sendMessage(clientFd, buildWelcomeMessage(it->second));
 						}
 					}
 					else
 					{
 						_channels[params[0]].insertMember(client);
-						std::string msg = buildWelcomeMessage(it->second);
-						send(clientFd, msg.c_str(), msg.size(), 0);
+						sendMessage(clientFd, buildWelcomeMessage(it->second));
 					}
 				}
 				else
 				{
-					const std::string message = "Invalid password.\n";
-					send(clientFd, message.c_str(), message.size(), 0);
+					sendMessage(clientFd, "Invalid password.\n");
 				}
 			}
 		}
@@ -207,8 +149,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 	}
 	else
 	{
-		const std::string errorMessage = "Invalid JOIN command. Connection will be closed.\n";
-		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+		sendMessage(clientFd, "Invalid JOIN command. Connection will be closed.\n");
 	}
 }
 
@@ -221,7 +162,7 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 
 //    The JOIN command is used by a user to request to start listening to
 //    the specific channel.  Servers MUST be able to parse arguments in the
-//    form of a list of target, but SHOULD NOT use lists when sending JOIN
+//    form of a list of target, but SHOULD NOT use lists when sendMessageing JOIN
 //    messages to clients.
 
 //    Once a user has joined a channel, he receives information about

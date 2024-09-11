@@ -11,11 +11,14 @@
 # include <map>
 #include <queue>
 #include <cerrno>
+# include <sstream>  
 
 # include <set>
 
 # include "../includes/Client.hpp"
 # include "../includes/Channel.hpp"
+
+
 
 # define ENDL std::cout << std::endl;
 
@@ -64,7 +67,7 @@ class Server
 
 
 
-	// --- Commands
+		// --- Commands
 		void	pass_cmd(int clientFd, std::vector<std::string> params);
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
@@ -77,9 +80,8 @@ class Server
 		void	names_cmd(int clientFd, std::vector<std::string> params);
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		Client* findClientByNickname(const std::string &nickname);
-		std::string buildWelcomeMessage(Channel &channel);
 
+		Client* findClientByNickname(const std::string &nickname);
 		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
 
 		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
@@ -88,4 +90,8 @@ class Server
 		void	mode_invite_only(Client &client, int clientFd, std::vector<std::string> params);
 		void	mode_password(Client &client, int clientFd, std::vector<std::string> params);
 		void	mode_limit(Client &client, int clientFd, std::vector<std::string> params);
+
+		//ultis
+		void sendMessage(int fd, const std::string& message);
+		std::string buildWelcomeMessage(Channel &channel);
 };

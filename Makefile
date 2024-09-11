@@ -24,6 +24,7 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/Server.cpp \
 				./srcs/Channel.cpp \
 				./srcs/commands/privmsg_cmd.cpp \
+				./srcs/commands/list_cmd.cpp \
 				./srcs/commands/topic_cmd.cpp \
 				./srcs/commands/nick_cmd.cpp \
 				./srcs/commands/user_cmd.cpp \
@@ -36,7 +37,12 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/commands/msg_cmd.cpp \
 				./srcs/commands/invite_cmd.cpp \
 				./srcs/commands/mode_cmd.cpp \
-
+				./srcs/utils_and_flags/messages.cpp \
+				./srcs/utils_and_flags/mode_invite.cpp \
+				./srcs/utils_and_flags/mode_key.cpp \
+				./srcs/utils_and_flags/mode_limite.cpp \
+				./srcs/utils_and_flags/mode_operator.cpp \
+				./srcs/utils_and_flags/mode_topic.cpp \
 
 
 OBJS		:=	$(SRCS:.cpp=.o)

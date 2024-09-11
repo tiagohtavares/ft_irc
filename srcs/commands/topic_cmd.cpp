@@ -9,18 +9,11 @@ void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> pa
 	if (isChannelExist(params.front()))
 	{
 		if (params.size() == 1) 
-		{
-			const std::string topicMessage = _channels[params.front()].getTopic() + "\n";
-			send(clientFd, topicMessage.c_str(), topicMessage.size(), 0);
-		} 
-
+			sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
 		else if (channel.isOperator(client) || channel.getTopicMode() == false)
 		{
 			if (params.size() == 0) 
-			{
-				const std::string topicMessage = "Please choose a new topic for the channel";
-				send(clientFd, topicMessage.c_str(), topicMessage.size(), 0);
-			}
+				sendMessage(clientFd, "Please choose a new topic for the channel");
 			else if (params.size() >= 2) 
 			{
 				std::string newTopic;
@@ -32,16 +25,10 @@ void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> pa
 			}
 		}
 		else
-		{
-			const std::string Message = "Error: Only operators can change the channel topic.\n";
-			send(clientFd, Message.c_str(), Message.size(), 0);
-		}
+			sendMessage(clientFd, "Error: Only operators can change the channel topic.\n");
 	}
 	else
-	{
-		const std::string Message = "The channel does not exist.\n";
-		send(clientFd, Message.c_str(), Message.size(), 0);
-	}
+		sendMessage(clientFd, "The channel does not exist.\n");
 }
 
 // 3.2.4 Topic message

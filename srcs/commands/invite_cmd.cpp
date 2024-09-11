@@ -15,8 +15,7 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
 {
     if (params.size() != 2)
     {
-        std::string errorMessage = "Error: Not enough parameters for INVITE command. Usage: INVITE <nickname> <channel> \n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+        sendMessage(clientFd, "Error: Not enough parameters for INVITE command. Usage: INVITE <nickname> <channel> \n");
         return;
     }
 
@@ -26,8 +25,7 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
     // Verificar se o canal existe
     if (!isChannelExist(channelName))
     {
-        std::string errorMessage = "Error: Channel " + channelName + " does not exist. \n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+        sendMessage(clientFd, "Error: Channel " + channelName + " does not exist. \n");
         return;
     }
 
@@ -35,8 +33,7 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
     Client* targetClient = findClientByNickname(targetNickname);
     if (targetClient == NULL)
     {
-        std::string errorMessage = "Error: User " + targetNickname + " does not exist. \n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+        sendMessage(clientFd, "Error: User " + targetNickname + " does not exist. \n");
         return;
     }
 
@@ -47,37 +44,28 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
         Channel &channel = itChannel->second;
         if (!channel.isMember(client))
         {
-            std::string errorMessage = "Error: You are not a member of the channel " + channelName + ". \n";
-            send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+            sendMessage(clientFd, "Error: You are not a member of the channel " + channelName + ". \n");
             return;
         }
-
         // Verificar se o usuário já é membro do canal
         if (channel.isMember(*targetClient))
         {
-            std::string errorMessage = "Error: User " + targetNickname + " is already a member of the channel. \n";
-            send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+            sendMessage(clientFd, "Error: User " + targetNickname + " is already a member of the channel. \n");
             return;
         }
 		if (_channels[channelName].getOperatorMode() == false || _channels[channelName].isOperator(client))
 		{
 			_channels[channelName].setInvited(*targetClient);
-
 			// Enviar convite para o usuário convidado
-			std::string inviteMessage = "You have been invited to join the channel " + channelName + " by " + client.getNickName() + ".\n";
-			send(targetClient->getClientFd(), inviteMessage.c_str(), inviteMessage.size(), 0);
+			sendMessage(targetClient->getClientFd(), "You have been invited to join the channel " + channelName + " by " + client.getNickName() + ".\n");
 			buildWelcomeMessage(channel);
 
 			// Notificar o cliente que o convite foi enviado
-			std::string successMessage = "Invitation sent to " + targetNickname + " for channel " + channelName + ".\n";
-			send(clientFd, successMessage.c_str(), successMessage.size(), 0);
+			sendMessage(clientFd, "Invitation sent to " + targetNickname + " for channel " + channelName + ".\n");
 		}
     }
     else
-    {
-        std::string errorMessage = "Error: Channel " + channelName + " does not exist. \n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-    }
+        sendMessage(clientFd, "Error: Channel " + channelName + " does not exist. \n");
 }
 
 // 3.2.7 Invite message

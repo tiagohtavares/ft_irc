@@ -206,16 +206,6 @@ void Server::splitCmdLine(std::string input)
 	}
 }
 
-
-void Server::printParams() const
-{
-    std::cout << "Command: " << _cmd << "\n";
-    std::cout << "Parameters:\n";
-    for (size_t i = 0; i < _params.size(); ++i) {
-        std::cout << "Param " << i + 1 << ": " << _params[i] << "\n";
-    }
-}
-
 bool Server::isNicknameInUse(const std::string &nick) const
 {
     // Explicit iterator type for the map
@@ -258,7 +248,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				user_cmd(client, clientFd, params);
 			else if (cmd == "PRIVMSG")
 				privmsg_cmd(clientFd, params);
-			else if (cmd == "INVITE") //INVITE <nickname> <channel>
+			else if (cmd == "INVITE")
 				invite_cmd(client, clientFd, params);
 			else if (cmd == "MSG")
 				msg_cmd(client, clientFd, params);
@@ -270,7 +260,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				part_cmd(client, clientFd, params);
 			else if (cmd == "KICK")
 				kick_cmd(client, clientFd, params);
-			else if (cmd == "MODE") // /MODE <nickname> +/-<mode> <channel_name>
+			else if (cmd == "MODE")
 				mode_cmd(client, clientFd, params);
 			else if (cmd == "LIST")
 				listChannels(client);
@@ -284,9 +274,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			{
 				if(cmd != "PASS")
 				{
-					send(clientFd, cmd.c_str(), cmd.size(), 0);
-					const std::string Message = ": invalid command\n";
-					send(clientFd, Message.c_str(), Message.size(), 0);
+					sendMessage(clientFd, cmd); 
+					sendMessage(clientFd, ": invalid command\n"); 
 				}
 			}
 		}
@@ -369,12 +358,4 @@ void	Server::deleteChannel(std::string &channelName)
 	}
 }
 
-void	Server::listChannels(Client &client)
-{
-	std::string channelList;
-	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		channelList += it->first + "\n";
-	}
-	send(client.getClientFd(), channelList.c_str(), channelList.size(), 0);
-}
+

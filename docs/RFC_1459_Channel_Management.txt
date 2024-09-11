@@ -212,7 +212,7 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
         KICK    - Eject a client from the channel
         MODE    - Change the channel's mode, as well as
                   members' privileges
-        PRIVMSG - Sending messages to the channel (mode +n, +m, +v)
+        PRIVMSG - sendMessageing messages to the channel (mode +n, +m, +v)
         TOPIC   - Change the channel topic in a mode +t channel
 
 
@@ -303,7 +303,7 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
 
    Unlike other channels, "safe channels" are not implicitly created.  A
    user wishing to create such a channel MUST request the creation by
-   sending a special JOIN command to the server in which the channel
+   sendMessageing a special JOIN command to the server in which the channel
    identifier (then unknown) is replaced by the character '!'.  The
    creation process for this type of channel is strictly controlled.
    The user only chooses part of the channel name (known as the channel
@@ -422,7 +422,7 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
    (e.g., a user with the nickname "anonymous", the username "anonymous"
    and from a host called "anonymous.").  Because of this, servers MUST
    forbid users from using the nickname "anonymous".  Servers MUST also
-   NOT send QUIT messages for users leaving such channels to the other
+   NOT sendMessage QUIT messages for users leaving such channels to the other
    channel members but generate a PART message instead.
 
    On channels with the character '&' as prefix, this flag MAY be
@@ -458,13 +458,13 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
 
    The channel flag 'm' is used to control who may speak on a channel.
    When it is set, only channel operators, and members who have been
-   given the voice privilege may send messages to the channel.
+   given the voice privilege may sendMessage messages to the channel.
 
       This flag only affects users.
 
 4.2.4 No Messages To Channel From Clients On The Outside
 
-   When the channel flag 'n' is set, only channel members MAY send
+   When the channel flag 'n' is set, only channel members MAY sendMessage
    messages to the channel.
 
       This flag only affects users.
@@ -477,7 +477,7 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
    From a user's point of view, the channel contains only one user.
 
    This is typically used to create special local channels on which the
-   server sends notices related to its operations.  This was used as a
+   server sendMessages notices related to its operations.  This was used as a
    more efficient and flexible way to replace the user mode 's' defined
    in RFC 1459 [IRC].
 
@@ -833,7 +833,7 @@ RFC 2811        Internet Relay Chat: Channel Management       April 2000
    for members all the users who are members of the channel on either
    server prior to the connection.
 
-   Similarly, each server sends the channel modes to the other one.
+   Similarly, each server sendMessages the channel modes to the other one.
    Therefore, each server also receives these channel modes.  There are
    three types of modes for a given channel: flags, masks, and data.
    The first two types are easy to deal with as they are either set or

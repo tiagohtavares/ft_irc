@@ -77,15 +77,6 @@ void	Channel::setOperator(std::string client)
 	}
 }
 
-// void	Channel::setBanned(Client &client)
-// {
-// 	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
-// 	{
-// 		// _banned.insert(std::make_pair(client.getClientFd(), &client));
-// 		_banned.insert(client.getClientFd());
-// 	}
-// }
-
 void	Channel::setInvited(Client &client)
 {
 	std::cout << "setInvited called" << std::endl;
@@ -176,11 +167,6 @@ std::map<int, Client*>	Channel::getOperators() const
 	return _operators;
 }
 
-// std::set<int>	Channel::getBanned() const
-// {
-// 	return _banned;
-// }
-
 std::set<int>	Channel::getInvited() const
 {
 	return _invited;
@@ -239,13 +225,6 @@ void	Channel::insertOperator(Client &client)
 	}
 }
 
-// void	Channel::insertBanned(Client &client)
-// {
-// 	if (_members.find(client.getClientFd()) != _members.end() && _banned.find(client.getClientFd()) == _banned.end())
-// 	{
-// 		_banned.insert(client.getClientFd(), Client);
-// 	}
-// }
 
 void	Channel::insertInvited(Client &client)
 {
@@ -438,7 +417,8 @@ void Channel::memberList(int clientFd) const
 	std::map<int, Client*>::const_iterator itOps = _operators.begin();
 	while (itOps != _operators.end() && itOps->second->getModeInvisible() == false)
 	{
-		const std::string operatos = "@" + itOps->second->getNickName() + "\n";
+		// const std::string operatos = "@" + itOps->second->getNickName() + "\n";
+		const std::string operatos = itOps->second->getNickName() + "\n";
 		send(clientFd, operatos.c_str(), operatos.size(), 0);
 		itOps++;
 	}
@@ -456,15 +436,47 @@ void Channel::memberList(int clientFd) const
 	}
 }
 
-// void	Channel::bannedList() const
+
+// void Channel::memberList(int clientFd) const
 // {
-// 	std::set<int>::iterator it = _banned.begin();
-// 	while (it != _banned.end())
-// 	{
-// 		std::cout << "!" << *it << std::endl;
-// 		it++;
-// 	}
+//     // Enviar operadores
+//     std::map<int, Client*>::const_iterator itOps = _operators.begin();
+//     while (itOps != _operators.end())
+//     {
+//         if (itOps->second->getModeInvisible() == false)
+//         {
+//             std::string operatorNick = "@" + itOps->second->getNickName();
+//             operatorNick += "\r\n"; // IRC usa \r\n para terminadores de linha
+
+//             if (send(clientFd, operatorNick.c_str(), operatorNick.size(), 0) == -1)
+//             {
+// 				std::cerr << "Error sending operator list" << std::endl;
+//                 return; // Sai da função em caso de erro
+//             }
+//         }
+//         ++itOps;
+//     }
+
+//     // Enviar membros não operadores
+//     std::map<int, Client*>::const_iterator it = _members.begin();
+//     while (it != _members.end())
+//     {
+//         if (_operators.find(it->first) == _operators.end() && it->second->getModeInvisible() == false)
+//         {
+//             std::string memberNick = it->second->getNickName();
+//             memberNick += "\r\n"; // IRC usa \r\n para terminadores de linha
+
+//             if (send(clientFd, memberNick.c_str(), memberNick.size(), 0) == -1)
+//             {
+				
+// 				std::cerr << "Error sending member list" << std::endl;
+//                 return; // Sai da função em caso de erro
+//             }
+//         }
+//         ++it;
+//     }
 // }
+
 
 void	Channel::invitedList() const
 {
@@ -476,16 +488,21 @@ void	Channel::invitedList() const
 	}
 }
 
-void Channel::broadcastMessage(int senderFd, const std::string &message)
+void Channel::broadcastMessage(int sendMessageerFd, const std::string &message)
 {
     for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
     {
         int memberFd = it->first;
 
-        // Skip the sender of the message
-        if (memberFd != senderFd)
+        // Skip the sendMessageer of the message
+        if (memberFd != sendMessageerFd)
         {
             send(memberFd, message.c_str(), message.size(), 0);
         }
     }
+}
+
+int Channel::getUsersCount() const 
+{
+    return _members.size();
 }

@@ -31,6 +31,8 @@ class Channel
 		// void			setBanned(Client &client);
 		void			setInvited(Client &client);
 
+		int 			getUsersCount() const; 
+
 		std::string		getChannelName() const;
 		std::string		getTopic() const;
 		std::string		getPassword() const;
@@ -72,7 +74,7 @@ class Channel
 
 		bool			isPasswordProtected() const;
 
-		void			broadcastMessage(int senderFd, const std::string &message);
+		void			broadcastMessage(int sendMessageerFd, const std::string &message);
 
 	private:
 		std::string					_channelName;
@@ -98,7 +100,7 @@ Command list for Channel IRC:
 * General commands:
 	- JOIN: Join a channel --> DONE!
 	- PART: Leave a channel --> DONE!
-	- PRIVMSG: Send a message to a channel or user --> DONE!
+	- PRIVMSG: sendMessage a message to a channel or user --> DONE!
 
 * Operator commands:
 	- KICK: Kick a user from a channel --> DONE!
@@ -116,5 +118,5 @@ Command list for Channel IRC:
 	- NAMES: List all users in a channel
 	- BAN: Ban a user from a channel
 	- UNBAN: Unban a user from a channel
-	- PRIVMSG: Send a message to a channel or user --> DONE!
+	- PRIVMSG: sendMessage a message to a channel or user --> DONE!
 */
