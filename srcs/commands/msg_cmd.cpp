@@ -1,5 +1,6 @@
 #include "../../includes/Server.hpp"
 
+//!Users que foram kicked do canal podem ainda mandar menssagem
 void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const
 {
     if (params.size() < 2)
