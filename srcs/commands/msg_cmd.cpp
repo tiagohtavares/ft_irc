@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 
-
+//!Users que foram kicked do canal podem ainda mandar menssagem
 void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const
 {
 	if (params.size() < 2)
@@ -25,7 +25,7 @@ if (channelIt != _channels.end())
 		{
 				if (memberIt->first != clientFd)
 				{
-					std::string message = client.getNickName() + ": ";
+					std::string message =   "[" + channel.getChannelName() + "] " + client.getNickName() + ": ";
 					for (size_t i = 1; i < params.size(); ++i)
 					{
 						message += params[i];

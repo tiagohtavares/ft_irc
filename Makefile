@@ -17,13 +17,14 @@
 
 NAME		:=	ircserv
 CXX			:=	c++
-CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g
+CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g -lreadline
 HEADERS		:=	./includes/main.hpp ./includes/Client.hpp ./includes/Channel.hpp ./includes/Server.hpp
 SRCS		:=	./srcs/main.cpp \
 				./srcs/Client.cpp \
 				./srcs/Server.cpp \
 				./srcs/Channel.cpp \
 				./srcs/commands/privmsg_cmd.cpp \
+				./srcs/commands/list_cmd.cpp \
 				./srcs/commands/topic_cmd.cpp \
 				./srcs/commands/nick_cmd.cpp \
 				./srcs/commands/user_cmd.cpp \
@@ -34,6 +35,14 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/commands/kick_cmd.cpp \
 				./srcs/commands/names_cmd.cpp \
 				./srcs/commands/msg_cmd.cpp \
+				./srcs/commands/invite_cmd.cpp \
+				./srcs/commands/mode_cmd.cpp \
+				./srcs/utils_and_flags/messages.cpp \
+				./srcs/utils_and_flags/mode_invite.cpp \
+				./srcs/utils_and_flags/mode_key.cpp \
+				./srcs/utils_and_flags/mode_limite.cpp \
+				./srcs/utils_and_flags/mode_operator.cpp \
+				./srcs/utils_and_flags/mode_topic.cpp \
 
 
 OBJS		:=	$(SRCS:.cpp=.o)

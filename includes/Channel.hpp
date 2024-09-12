@@ -19,23 +19,28 @@ class Channel
 		void			setChannelName(std::string &channelName);
 		void			setTopic(std::string &topic);
 		void			setPassword(std::string &password);
+		void			setLimit(unsigned int limit);
 		void			setOperator(Client &client);
-		void			setInvitedMode(bool inviteOnly);
-		void			setTopicMode(bool inviteOnly);
-		void			setPasswordMode(bool inviteOnly);
-		void			setOperatorMode(bool inviteOnly);
-		void			setLimitMode(bool inviteOnly);
+		void			setOperator(std::string client);
+		void			setInvitedMode(bool status);
+		void			setLimitMode(bool status);
+		void			setOperatorMode(bool status);
+		void			setPasswordMode(bool status);
+		void			setTopicMode(bool status);
 
-		void			setBanned(Client &client);
+		// void			setBanned(Client &client);
 		void			setInvited(Client &client);
+
+		int 			getUsersCount() const;
 
 		std::string		getChannelName() const;
 		std::string		getTopic() const;
 		std::string		getPassword() const;
+		unsigned int	getLimit() const;
 		Client*			getMember(std::string nickname) const;
 		std::map<int, Client*>	getMembers() const;
 		std::map<int, Client*>	getOperators() const;
-		std::set<int>	getBanned() const;
+		// std::set<int>	getBanned() const;
 		std::set<int>	getInvited() const;
 		bool			getInviteMode() const;
 		bool			getTopicMode() const;
@@ -45,39 +50,47 @@ class Channel
 
 		void			insertOperator(Client &client);
 		void			insertMember(Client &client);
-		void			insertBanned(Client &client);
+		// void			insertBanned(Client &client);
 		void			insertInvited(Client &client);
 
 		void			removeOperator(Client &client);
+		void			removeOperator(std::string client);
 		void			removeMember(Client &client);
 		void			removeMember(std::string nickname);
 		void			removeBanned(Client &client);
 		void			removeInvited(Client &client);
 
 		bool			isOperator(const Client& client) const;
+		bool			isOperator(std::string nickname) const;
 		bool			isMember(const Client& client) const;
 		bool			isMember(std::string nickname) const;
 		bool			isBanned(const Client& client) const;
+		bool			isBanned(std::string nickname) const;
 		bool			isInvited(const Client& client) const;
 
 		void			memberList(int clientFd) const;
 		void			bannedList() const;
 		void			invitedList() const;
 
-		//void			broadcastMessage(int senderFd, const std::string &message);
+		bool			isPasswordProtected() const;
+
+		void			broadcastMessage(int sendMessageerFd, const std::string &message);
+
 	private:
 		std::string					_channelName;
 		std::string					_topic;
 		std::string					_password;
+		unsigned int				_limit;
 		std::map<int, Client*>		_members;
+		std::map<int, Client*>		_creator;
 		std::map<int, Client*>		_operators;
-		std::set<int>				_banned;
+		std::map<int, Client*>		_banned;
 		std::set<int>				_invited;
-		bool						_inviteMode;// MODE +i (true) or -i (false)
-		bool						_topicMode;// MODE +t (true) or -t (false)
-		bool						_passwordMode;// MODE +k (true) or -k (false)
-		bool						_operatorMode;// MODE +o (true) or -o (false)
+		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
 		bool						_limitMode;// MODE +l (true) or -l (false)
+		bool						_operatorMode;// MODE +o (true) or -o (false)
+		bool						_passwordMode;// MODE +k (true) or -k (false)
+		bool						_topicMode;// MODE +t (true) or -t (false)
 };
 
 #endif
@@ -87,7 +100,7 @@ Command list for Channel IRC:
 * General commands:
 	- JOIN: Join a channel --> DONE!
 	- PART: Leave a channel --> DONE!
-	- PRIVMSG: Send a message to a channel or user --> DONE!
+	- PRIVMSG: sendMessage a message to a channel or user --> DONE!
 
 * Operator commands:
 	- KICK: Kick a user from a channel --> DONE!
@@ -105,5 +118,5 @@ Command list for Channel IRC:
 	- NAMES: List all users in a channel
 	- BAN: Ban a user from a channel
 	- UNBAN: Unban a user from a channel
-	- PRIVMSG: Send a message to a channel or user --> DONE!
+	- PRIVMSG: sendMessage a message to a channel or user --> DONE!
 */

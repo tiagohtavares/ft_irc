@@ -7,26 +7,17 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 		if (isChannelExist(params.front()))
 		{
 			if (isClientInChannel(params.front(), client))
-			{
 				_channels[params.front()].removeMember(client);
-			}
 			else
-			{
-				const std::string errorMessage = "You are not in the " + params.front() + " channel.\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-			}
+				sendMessage(clientFd, "You are not in the " + params.front() + " channel.\n");
 		}
 		else
-		{
-			const std::string errorMessage = "The " + params.front() + " channel does not exist.\n";
-			send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-		}
+			sendMessage(clientFd, "The " + params.front() + " channel does not exist.\n");
 		params.front();
 	}
 	else
 	{
-		const std::string errorMessage = "Invalid PART command. Connection will be closed.\n";
-		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+		sendMessage(clientFd, "Invalid PART command. Connection will be closed.\n");
 		cleanupClient(clientFd);
 		return;
 	}

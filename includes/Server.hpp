@@ -10,11 +10,15 @@
 # include <poll.h>
 # include <map>
 #include <queue>
+#include <cerrno>
+# include <sstream>
 
 # include <set>
 
 # include "../includes/Client.hpp"
 # include "../includes/Channel.hpp"
+
+
 
 # define ENDL std::cout << std::endl;
 
@@ -35,7 +39,9 @@ class Server
 
 		void	start();
 
+		// Client management
 		std::map<int, Client> _mapClients;
+
 
 		// Channel management
 		std::map<std::string, Channel>	_channels;
@@ -61,18 +67,32 @@ class Server
 
 
 
-	// --- Commands
+		// --- Commands
 		void	pass_cmd(int clientFd, std::vector<std::string> params);
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	privmsg_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		void	topic_cmd(int clientFd, std::vector<std::string> params);
+		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	quit_cmd(int clientFd);
-
-		Client* findClientByNickname(const std::string& nickname, int operatorFd);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	names_cmd(int clientFd, std::vector<std::string> params);
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
+		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
+
+		Client* findClientByNickname(const std::string &nickname);
+		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
+
+		void	mode_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_operator(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_topic(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_invite_only(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_password(Client &client, int clientFd, std::vector<std::string> params);
+		void	mode_limit(Client &client, int clientFd, std::vector<std::string> params);
+
+		//ultis
+		void sendMessage(int fd, const std::string& message);
+		std::string buildWelcomeMessage(Channel &channel);
+		void sendToChannel(const std::string& channelName, const std::string& message);
 };

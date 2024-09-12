@@ -14,20 +14,17 @@ void	Server::user_cmd(Client &client, int clientFd, std::vector<std::string> par
 						client.setUserName(username);
 						client.setRealName(realName);
 
-						// Send a welcome message after USER is set
+						// sendMessage a welcome message after USER is set
 						const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
-						send(clientFd, welcomeUser.c_str(), welcomeUser.size(), 0);
+						sendMessage(clientFd,welcomeUser);
+					
 					}
 					else
-					{
-						const std::string errorMessage = "Username already set.\n";
-						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-					}
+						sendMessage(clientFd, "Username already set.\n");
 				}
 				else
 				{
-					const std::string errorMessage = "Invalid USER command. Connection will be closed.\n";
-					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					sendMessage(clientFd, "Invalid USER command. Connection will be closed.\n");
 					cleanupClient(clientFd);
 					return;
 				}
