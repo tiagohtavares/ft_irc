@@ -10,53 +10,76 @@
 #                                                                              #
 # **************************************************************************** #
 
-# CXX = c++
-# CXXFLAGS = -Wall -Wextra -std=c++98
-# SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp
-# OBJ = $(SRC:.cpp=.o)
-# TARGET = ircserv
 
-# all: $(TARGET)
+# *==============================================================================
+# *VARIABLES
+# *==============================================================================
 
-# $(TARGET): $(OBJ)
-# 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ)
+NAME		:=	ircserv
+CXX			:=	c++
+CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g
+HEADERS		:=	./includes/main.hpp ./includes/Client.hpp ./includes/Channel.hpp ./includes/Server.hpp
+SRCS		:=	./srcs/main.cpp \
+				./srcs/Client.cpp \
+				./srcs/Server.cpp \
+				./srcs/Channel.cpp \
+				./srcs/commands/privmsg_cmd.cpp \
+				./srcs/commands/topic_cmd.cpp \
+				./srcs/commands/nick_cmd.cpp \
+				./srcs/commands/user_cmd.cpp \
+				./srcs/commands/join_cmd.cpp \
+				./srcs/commands/part_cmd.cpp \
+				./srcs/commands/quit_cmd.cpp \
+				./srcs/commands/pass_cmd.cpp \
+				./srcs/commands/kick_cmd.cpp \
+				./srcs/commands/names_cmd.cpp \
+				./srcs/commands/msg_cmd.cpp \
 
-# clean:
-# 	rm -f $(OBJ) $(TARGET)
 
-# .PHONY: all clean
+OBJS		:=	$(SRCS:.cpp=.o)
 
+# *==============================================================================
+# *COLORS
+# *==============================================================================
 
-CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -g -std=c++98 -Iincludes
-NAME = ircserv
+EOC				:=	"\e[0m"
+ITALIC_GRAY		:=	"\e[3;37m"
+ITALIC_MAGENTA	:=	"\e[1;3;35m"
+ITALIC_GREEN 	:= 	"\e[1;3;32m"
 
-SRC_DIR = srcs
-OBJ_DIR = objects
+# *==============================================================================
+# *DEBUG
+# *==============================================================================
 
-SRCS = $(SRC_DIR)/main.cpp \
-       $(SRC_DIR)/Server.cpp \
-	   $(SRC_DIR)/Client.cpp
+ifdef DEBUG
+	CFLAGS		+= -g -fsanitize=address
+endif
 
-OBJS = $(OBJ_DIR)/main.o \
-		$(OBJ_DIR)/Server.o \
-		$(OBJ_DIR)/Client.o
+# *==============================================================================
+# *ROLES
+# *==============================================================================
 
-all: $(NAME)
+all:		$(NAME)
 
-$(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+%.o:	%.cpp $(HEADERS)
+			@echo $(ITALIC_GRAY) Compiling $<$(EOC)
+			$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	mkdir -p $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+$(NAME):	$(OBJS)
+			@echo $(ITALIC_GREEN)$(NAME) created! $(EOC)
+			$(CXX) $(OBJS) $(CXXFLAGS) -o $@
+
+debug:
+	$(CXX) -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address  -o $(NAME) $(SRCS)
 
 clean:
-	rm -rf $(OBJ_DIR)
+			@rm -rf $(OBJS)
+			@echo $(ITALIC_MAGENTA)"Objects deleted"$(EOC)
 
-fclean: clean
-	rm -f $(NAME)
+fclean:		clean
+			@rm -f $(NAME)
+			@echo $(ITALIC_MAGENTA)$(NAME)" deleted"$(EOC)
 
-re: fclean all
+re:			fclean all
 
-.PHONY: all clean fclean re
+.PHONY:		all clean fclean re

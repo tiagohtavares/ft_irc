@@ -2,6 +2,7 @@
 
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1), _mapClients(), _cmd(), _params()
 {
+	Channel defaultChannel;
 }
 
 Server::~Server()
@@ -158,7 +159,7 @@ void Server::handleNewConnection()
 void Server::splitCmdLine(std::string input)
 {
 	while (!_params.empty())
-		_params.pop();
+		_params.pop_back();
 
 	input = input.substr(input.find_first_not_of(" "));
 	size_t space_pos = input.find_first_of(" ");
@@ -185,226 +186,106 @@ void Server::splitCmdLine(std::string input)
 		{
 			input.erase(input.begin());
 			if (!input.empty())
-				_params.push(input);
+				_params.push_back(input);
 			break;
 		}
 		space_pos = input.find_first_of(" ");
 		if (space_pos == std::string::npos)
 		{
-			_params.push(input);
+			_params.push_back(input);
 			break;
 		}
 		else
 		{
-			_params.push(input.substr(0, space_pos));
+			_params.push_back(input.substr(0, space_pos));
 			input.erase(0, ++space_pos);
 		}
 	}
 }
 
 
+void Server::printParams() const
+{
+    std::cout << "Command: " << _cmd << "\n";
+    std::cout << "Parameters:\n";
+    for (size_t i = 0; i < _params.size(); ++i) {
+        std::cout << "Param " << i + 1 << ": " << _params[i] << "\n";
+    }
+}
 
+bool Server::isNicknameInUse(const std::string &nick) const
+{
+    // Explicit iterator type for the map
+    std::map<int, Client>::const_iterator it;
 
-void Server::processClientMessage(int clientFd, std::string cmd, std::stack<std::string> params)
+    for (it = _mapClients.begin(); it != _mapClients.end(); ++it)
+	{
+        if (it->second.getNickName() == nick)
+		{
+            return true;
+        }
+    }
+    return false;
+}
+
+void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std::string> params)
 {
 	Client &client = _mapClients[clientFd];
 
+	//-----PRINT cmd and params-----//
 	std::cout << "cmd: " << cmd << std::endl;
 
-
-	//Solucao temp inverto a stack para ter NICK :MENSAGEM ,em vez de MENSAGEM: NICK
-	std::vector<std::string> temp;
-
-	std::queue<std::string> queue;
-
-	// Transfer elements from stack to queue
-	while (!params.empty())
-	{
-		queue.push(params.top());
-		params.pop();
-	}
-
-	// Transfer elements from queue back to stack
-	while (!queue.empty())
-	{
-		params.push(queue.front());
-		queue.pop();
-	}
-
-	// Traverse the stack
-	while (!params.empty())
-	{
-		// Pop the top element
-		std::string topElement = params.top();
-		params.pop();
-
-		// Print the element
-		std::cout << "params: " << topElement << std::endl;
-
-		// Store it in the temporary container
-		temp.push_back(topElement);
-	}
-
-	std::vector<std::string>::reverse_iterator it;
-	for (it = temp.rbegin(); it != temp.rend(); ++it)
-	{
-		params.push(*it);
-	}
+	for (std::size_t i = 0; i < params.size(); i++){std::cout << "params: " << params[i] << std::endl;}
 
 	if (!cmd.empty())
 	{
 		if(!_authenticatedClients[clientFd])
 		{
-			if (cmd == "CAP")
-			{
-				return;
-			}
-			else if (cmd == "PASS")
-			{
-				std::cout << "Received password: " << params.top() << std::endl;
-				std::cout << "Params size: " << params.size() << std::endl;
-				if (params.size() == 1)
-				{
-					if (params.top() == _password)
-					{
-						_authenticatedClients[clientFd] = true;
-						const std::string welcomeMessage = "Password accepted. You are now connected.\n";
-						send(clientFd, welcomeMessage.c_str(), welcomeMessage.size(), 0);
-						std::cout << "Client authenticated." << std::endl;
-						// params.pop();
-					}
-					else
-					{
-						const std::string errorMessage = "Invalid password. Connection will be closed.\n";
-						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-						cleanupClient(clientFd);
-						return;
-					}
-				}
-			}
+			if (cmd == "CAP"){return;}
 			else
-			{
-				const std::string errorMessage = "Invalid command. Connection will be closed.\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				cleanupClient(clientFd);
-				return;
-			}
+				pass_cmd(clientFd, params);
 		}
 		if(_authenticatedClients[clientFd])
 		{
-			if (cmd == "NICK" )
+			if (cmd == "NICK")
+				nick_cmd(client, clientFd, params);
+			if (cmd == "USER" && client.getUserName().empty())
+				user_cmd(client, clientFd, params);
+			if (cmd == "PRIVMSG")	// Check for errors on msg.
+				privmsg_cmd(client, clientFd, params);
+			if (cmd == "MSG")	// This command is pointless i think.
+				msg_cmd(client, clientFd, params);
+			if (cmd == "JOIN")
+				join_cmd(client, clientFd, params);
+			if (cmd == "TOPIC" && params.size() >= 1 && isChannelExist(params.front()))
+				topic_cmd(clientFd, params);
+			if (cmd == "PART")
+				part_cmd(client, clientFd, params);
+			if (cmd == "KICK") // Parâmetros: <canal> <usuário> [<comentário>]
+				kick_cmd(client, clientFd, params);
+			else if (cmd == "LIST")
 			{
-				if (params.size() != 0) 		//Lidar com situacao de 2 nicks iguais ------------!!!!!!!!!!!!!!!!!!
-				{
-					client.setNickName(params.top());
-				}
-				else
-				{
-					const std::string errorMessage = "Invalid nickname. Connection will be closed.\n";
-					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-					cleanupClient(clientFd);
-					return;
-				}
+				listChannels(client);
 			}
-			else if (cmd == "USER" && client.getUserName().empty())
+			else if (cmd == "NAMES")	// Check for @ on operator.
 			{
-				if (params.size() >= 4) // Typically, USER command has 4 parameters
-				{
-					std::string username = params.top(); params.pop();
-					std::string mode = params.top(); params.pop(); // Mode is typically ignored but popped
-					std::string unused = params.top(); params.pop(); // Unused parameter, typically '*'
-					std::string realName = params.top(); params.pop(); // Real name
-
-					if (client.getUserName().empty()) // Set the username if not already set
-					{
-						client.setUserName(username);
-						client.setRealName(realName);
-
-						// Send a welcome message after USER is set
-						const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
-						send(clientFd, welcomeUser.c_str(), welcomeUser.size(), 0);
-					}
-					else
-					{
-						const std::string errorMessage = "Username already set.\n";
-						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-					}
-				}
-				else
-				{
-					const std::string errorMessage = "Invalid USER command. Connection will be closed.\n";
-					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-					cleanupClient(clientFd);
-					return;
-				}
+				names_cmd(clientFd, params);
 			}
-			else if (cmd == "PRIVMSG")
-			{
-				if (params.size() < 2)
-				{
-					const std::string errorMessage = "Usage: PRIVMSG <nickname> <message>\n";
-					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				}
-				else
-				{
-					// Get the recipient's nickname first
-					std::string recipientNick = params.top();
-					std::cout << "recipient nick: " << recipientNick << std::endl;
-					params.pop();
-
-					// Combine remaining params into the message
-					std::string message;
-					while (!params.empty())
-					{
-						message = params.top() + (message.empty() ? "" : " " + message);
-						params.pop();
-					}
-					std::cout << "message: " << message << std::endl;
-
-					std::string senderNick = _mapClients[clientFd].getNickName();
-					std::string formattedMessage = senderNick + ": " + message + "\n";
-
-					bool recipientFound = false;
-
-					for (std::map<int, Client>::iterator it = _mapClients.begin(); it != _mapClients.end(); ++it)
-					{
-						// Access the Client object using it->second
-						if (it->second.getNickName() == recipientNick)
-						{
-							// Client with the desired nickname found
-							std::cout << "Client with nickname " << recipientNick << " found. Client FD: " << it->first << std::endl;
-							send(it->first, formattedMessage.c_str(), formattedMessage.size(), 0);
-							recipientFound = true;
-							break;  // Exit loop once the client is found
-						}
-					}
-
-					if (!recipientFound)
-					{
-						const std::string errorMessage = "No such user with nickname " + recipientNick + ".\n";
-						send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-					}
-				}
-				}
-			else if (cmd.empty() && params.empty())
-			{
-				return ;
-			}
+			else if (cmd.empty() && params.empty()){return;}
 			else
 			{
-				// std::cout << "Message from " << client.getNickName() << ": " << receivedMessage << std::endl;
 				if (cmd == "QUIT")
-				{
-					std::cout << "Received close message. Shutting down client." << std::endl;
-					cleanupClient(clientFd);
-				}
+					quit_cmd(clientFd);
 			}
 		}
 	}
 }
 
-void Server::cleanupClient(int clientFd)
-{
+
+
+
+
+void Server::cleanupClient(int clientFd) {
 	std::cout << "Cleaning up client " << clientFd << std::endl;
 	close(clientFd);
 	_authenticatedClients.erase(clientFd);
@@ -428,4 +309,102 @@ void Server::cleanup()
 		_pollfds.erase(_pollfds.begin() + i);
 		--i;
 	}
+}
+
+
+/*
+	* To do: check if the channel is private before inserting the client;
+	* DONE: After the customer has already entered the channel, he cannot enter again;
+*/
+void Server::createChannel(std::string &channelName, Client &client)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		_channels.insert(std::make_pair(channelName, Channel(channelName, client)));
+	}
+	else
+	{
+		it->second.insertMember(client);
+	}
+}
+
+bool Server::isChannelExist(const std::string &channelName) const
+{
+    std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
+    if (it == _channels.end())
+    {
+        return false;
+    }
+    return true;
+}
+
+bool	Server::isClientInChannel(std::string &channelName, Client &client)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+	if (it != _channels.end())
+	{
+		if (it->second.getMembers().find(client.getClientFd()) != it->second.getMembers().end())
+		{
+			return (true);
+		}
+	}
+	return (false);
+}
+
+void	Server::deleteChannel(std::string &channelName)
+{
+	if (_channels.find(channelName) != _channels.end())
+	{
+		_channels.erase(channelName);
+	}
+}
+
+void	Server::listChannels(Client &client)
+{
+	std::string channelList;
+	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		channelList += it->first + "\n";
+	}
+	send(client.getClientFd(), channelList.c_str(), channelList.size(), 0);
+}
+
+
+
+
+
+
+
+
+Client* Server::findClientByNickname(const std::string& nickname, int operatorFd)
+{
+
+    std::map<int, Client>::iterator it;
+    Client* result;
+
+    for (it = _mapClients.begin(); it != _mapClients.end(); ++it)
+    {
+        Client &client = it->second;
+        std::cout << "Checking client: " << client.getNickName() << std::endl; // Imprime todos os nicknames encontrados
+
+        if (client.getClientFd() == operatorFd){continue;}
+
+        if (client.getNickName() == nickname)
+        {
+            result = &client;
+            break;
+        }
+    }
+
+    if (result != NULL)
+	{
+        std::cout << "Client found: " << result->getNickName() << " with FD: " << result->getClientFd() << std::endl;
+	} else
+	{
+        std::cout << "Client with nickname '" << nickname << "' not found or is the operator of the channel." << std::endl;
+		return(NULL);
+	}
+
+    return result;
 }

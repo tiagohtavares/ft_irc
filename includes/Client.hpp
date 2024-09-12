@@ -1,5 +1,5 @@
-
-#pragma once
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
 # include <iostream>
 # include <string>
@@ -9,8 +9,7 @@
 # include <arpa/inet.h>
 # include <fcntl.h>
 # include <sys/select.h>
-// # include <stdlib.h>
-# include <cstdlib> // substitui a biblioteca stdlib.h
+# include <cstdlib>
 # include <poll.h>
 # include <map>
 
@@ -34,7 +33,6 @@ class Client
 		void		setClientFd(int clientFd);
 		void		setNickName(const std::string &nickName);
 		void		setAuthenticated(bool authenticated);
-		void		setClientAddress(sockaddr_in clientAddress);
 		void		setUserName(const std::string &userName);
 		void		setRealName(const std::string &realName);
 
@@ -46,3 +44,5 @@ class Client
 		std::string	_realName;
 		bool		_authenticated;
 };
+
+#endif

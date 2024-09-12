@@ -1,6 +1,31 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
+    {
+      "name": "(gdb) Iniciar",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/ircserv",
+      "args": ["4242", "asd"],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Habilitar a reformatação automática para gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description": "Definir Tipo de Desmontagem como Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
     {
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
@@ -8,8 +33,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/joe/Documents/ft_irc/srcs",
-      "program": "/home/joe/Documents/ft_irc/srcs/build/Debug/outDebug",
+      "cwd": "/home/joe/Documents/ft_irc/srcs/commands",
+      "program": "/home/joe/Documents/ft_irc/srcs/commands/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
