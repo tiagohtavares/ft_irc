@@ -257,8 +257,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				nick_cmd(client, clientFd, params);
 			if (cmd == "USER" && client.getUserName().empty())
 				user_cmd(client, clientFd, params);
-			if (cmd == "PRIVMSG")
-				privmsg_cmd(clientFd, params);
+			if (cmd == "PRIVMSG")	// Check for errors on msg.
+				privmsg_cmd(client, clientFd, params);
 			if (cmd == "MSG")	// This command is pointless i think.
 				msg_cmd(client, clientFd, params);
 			if (cmd == "JOIN")
@@ -273,7 +273,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			{
 				listChannels(client);
 			}
-			else if (cmd == "NAMES")
+			else if (cmd == "NAMES")	// Check for @ on operator.
 			{
 				names_cmd(clientFd, params);
 			}

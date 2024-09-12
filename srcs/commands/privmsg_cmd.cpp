@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 
-void Server::privmsg_cmd(int clientFd, std::vector<std::string> params)
+void Server::privmsg_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
     if (params.size() < 2)
     {
@@ -26,17 +26,7 @@ void Server::privmsg_cmd(int clientFd, std::vector<std::string> params)
 
     if (recipient[0] == '#')  // Check if the recipient is a channel
     {
-        // Send the message to all users in the channel
-        if (_channels.find(recipient) != _channels.end())
-        {
-            Channel &channel = _channels[recipient];
-            channel.broadcastMessage(clientFd, formattedMessage);
-        }
-        else
-        {
-            const std::string errorMessage = "No such channel: " + recipient + ".\n";
-            send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-        }
+       msg_cmd(client, clientFd, params);
     }
     else // Assume the recipient is a user
     {

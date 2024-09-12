@@ -372,16 +372,17 @@ void	Channel::invitedList() const
 	}
 }
 
-void Channel::broadcastMessage(int senderFd, const std::string &message)
-{
-    for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
-    {
-        int memberFd = it->first;
+// void Channel::broadcastMessage(int senderFd, const std::string &message)
+// {
+// 	std::map<int, Client*> members = getMembers();
+//     for (std::map<int, Client*>::iterator it = members.begin(); it != members.end(); ++it)
+//     {
+//         int memberFd = it->first;
 
-        // Skip the sender of the message
-        if (memberFd != senderFd)
-        {
-            send(memberFd, message.c_str(), message.size(), 0);
-        }
-    }
-}
+//         // Skip the sender of the message
+//         if (memberFd != senderFd)
+//         {
+//             send(memberFd, message.c_str(), message.size(), 0);
+//         }
+//     }
+// }

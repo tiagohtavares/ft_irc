@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 
-void	Server::names_cmd(int clientFd, std::vector<std::string> params)
+void	Server::names_cmd(int clientFd, std::vector<std::string> params) 
 {
 	if (params.size() == 1)
 	{
