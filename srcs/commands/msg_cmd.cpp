@@ -3,24 +3,24 @@
 
 void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const
 {
-    if (params.size() < 2)
-    {
+	if (params.size() < 2)
+	{
 
-        std::string errorMessage = "Error: Not enough parameters for MSG command. Usage: MSG <channel> <message>\n";
-        send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-        return;
-    }
+		std::string errorMessage = "Error: Not enough parameters for MSG command. Usage: MSG <channel> <message>\n";
+		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+		return;
+	}
 
-    std::string channelName = params[0];
-    std::map<std::string, Channel>::const_iterator channelIt = _channels.find(channelName);
+	std::string channelName = params[0];
+	std::map<std::string, Channel>::const_iterator channelIt = _channels.find(channelName);
 
-   if (channelIt != _channels.end())
+if (channelIt != _channels.end())
 	{
 		const Channel &channel = channelIt->second;
 		const std::map<int, Client*> &members = channel.getMembers();
 
-		for (std::map<int, Client*>::const_iterator memberIt = members.begin(); 
-			memberIt != members.end(); 
+		for (std::map<int, Client*>::const_iterator memberIt = members.begin();
+			memberIt != members.end();
 			++memberIt)
 		{
 				if (memberIt->first != clientFd)

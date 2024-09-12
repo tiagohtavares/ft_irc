@@ -58,7 +58,7 @@ void Server::nick_cmd(Client &client, int clientFd, std::vector<std::string> par
             // Construct the NICK command response message
             std::string nickChangeMessage = ":" + client.getNickName() + " NICK :" + newNick + "\r\n";
 
-           // Send the response back to the client
+        // Send the response back to the client
             send(clientFd, nickChangeMessage.c_str(), nickChangeMessage.size(), 0);
 
             // Optionally broadcast the nickname to other clients in the same channels
