@@ -107,13 +107,27 @@ void Server::run()
                     std::string receivedMessage(buffer, bytesReceived);
 					std::cout << "Received message: " << receivedMessage << std::endl;
                     size_t pos = 0;
-                    while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
-                    {
-                        std::string singleMessage = receivedMessage.substr(0, pos);
-                        receivedMessage.erase(0, pos + 2); // Remove the processed message
-                        splitCmdLine(singleMessage);
-                        processClientMessage(_pollfds[i].fd, _cmd, _params);
-                    }
+					while ((pos = receivedMessage.find_first_of("\r\n")) != std::string::npos)
+					{
+						std::string singleMessage = receivedMessage.substr(0, pos);
+						receivedMessage.erase(0, pos + 1); // Remove o '\r' ou '\n' que foi encontrado
+
+						// Se a próxima posição for o outro caractere (ou seja, '\r\n' encontrado), remove também
+						if (!receivedMessage.empty() && (receivedMessage[0] == '\r' || receivedMessage[0] == '\n')) {
+							receivedMessage.erase(0, 1); // Remove o segundo caractere ('\r' ou '\n')
+						}
+						splitCmdLine(singleMessage);
+						processClientMessage(_pollfds[i].fd, _cmd, _params);
+					}
+
+
+                    // while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
+                    // {
+                    //     std::string singleMessage = receivedMessage.substr(0, pos);
+                    //     receivedMessage.erase(0, pos + 2); // Remove the processed message
+                    //     splitCmdLine(singleMessage);
+                    //     processClientMessage(_pollfds[i].fd, _cmd, _params);
+                    // }
                 }
             }
         }
