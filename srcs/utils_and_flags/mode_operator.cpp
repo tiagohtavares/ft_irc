@@ -1,5 +1,10 @@
 #include "../../includes/Server.hpp"
 
+/*
+	* MODE_OPERATOR
+	* 	mode #channel -/+o
+	* 	mode #channel -/+o member_target
+*/
 void Server::mode_operator(Client &client, int clientFd, std::vector<std::string> params)
 {
 	if (params.size() < 2 || params.size() > 3)
@@ -32,12 +37,12 @@ void Server::mode_operator(Client &client, int clientFd, std::vector<std::string
 		if (params[1] == "+o")
 		{
 			it->second.setOperatorMode(true);
-			sendMessage(clientFd, "Only operators can change channel modes now.\n");
+			// sendMessage(clientFd, "Only operators can change channel modes now.\n");
 		}
 		else if (params[1] == "-o")
 		{
 			it->second.setOperatorMode(false);
-			sendMessage(clientFd, "Any user can change channel modes now.\n");
+			// sendMessage(clientFd, "Any user can change channel modes now.\n");
 		}
 		else
 		{
@@ -62,12 +67,17 @@ void Server::mode_operator(Client &client, int clientFd, std::vector<std::string
 				return;
 			}
 			it->second.setOperator(params[2]);
-			sendMessage(clientFd, params[2] + " is now an operator of this channel!\n");
+			// std::cout << "Added operator: " << params[2] << std::endl;
+			// sendMessage(clientFd, params[2] + " is now an operator of " + params[0] + ".\n");
 		}
 		else if (params[1] == "-o")
 		{
-			it->second.removeOperator(params[2]);
-			sendMessage(clientFd, params[2] + " is no longer an operator of " + params[0] + "!\n");
+			if (it->second.isOperator(params[2]))
+			{
+				it->second.removeOperator(params[2]);
+				// sendMessage(clientFd, params[2] + " is no longer an operator of " + params[0] + "!\n");
+				return;
+			}
 		}
 		else
 		{

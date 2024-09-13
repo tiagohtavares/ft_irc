@@ -141,8 +141,8 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 		{
 			// join #canal pwd
 			createChannel(params.front(), client);
-			_channels[params[0]].setPasswordMode(true);
-			_channels[params[0]].setPassword(params[1]);
+			_channels[params[0]].setPasswordMode(true, params[1]);
+			// _channels[params[0]].setPassword(params[1]);
 		}
 		while (params.size() > 0)
 			params.pop_back();
@@ -152,7 +152,6 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 		sendMessage(clientFd, "Invalid JOIN command. Connection will be closed.\n");
 	}
 }
-
 
 // 3.2.1 Join message
 
@@ -197,3 +196,4 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 
 //    :WiZ!jto@tolsun.oulu.fi JOIN #Twilight_zone ; JOIN message from WiZ
 //                                    on channel #Twilight_zone
+

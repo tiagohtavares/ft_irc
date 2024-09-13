@@ -11,9 +11,9 @@ Channel::Channel(std::string &channelName, Client &client)
 {
 	setChannelName(channelName);
 	setInvitedMode(false);
-	setLimitMode(false);
+	setLimitMode(false, "");
 	setOperatorMode(false);
-	setPasswordMode(false);
+	setPasswordMode(false, "");
 	setTopicMode(false);
 	insertMember(client);
 	setOperator(client);
@@ -45,6 +45,11 @@ void	Channel::setTopic(std::string &topic)
 void	Channel::setPassword(std::string &password)
 {
 	_password = password;
+	for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+	{
+		std::string message = "Password updated: " + getPassword() + ". Only users with the correct password can join the channel now.\n";
+		send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+	}
 }
 
 void	Channel::setLimit(unsigned int limit)
@@ -60,17 +65,24 @@ void	Channel::setOperator(Client &client)
 	}
 }
 
-void	Channel::setOperator(std::string client)
+void	Channel::setOperator(std::string nickname)
 {
-	if (isMember(client) && !isBanned(client))
+	if (isMember(nickname) && !isBanned(nickname))
 	{
 		std::map<int, Client*>::const_iterator it = _members.begin();
 		while (it != _members.end())
 		{
-			if (it->second->getNickName() == client && _operators.find(it->second->getClientFd()) == _operators.end())
+			if (it->second->getNickName() == nickname && _operators.find(it->second->getClientFd()) == _operators.end())
 			{
-				_operators.insert(std::make_pair(it->second->getClientFd(), it->second));
-				break;
+				int clientFd = it->first;
+				_operators.insert(std::make_pair(clientFd, it->second));
+
+				for (it = _members.begin(); it != _members.end(); it++)
+				{
+					std::string message = nickname + " is now an operator of " + getChannelName() + ".\n";
+					send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+				}
+				return ;
 			}
 			it++;
 		}
@@ -90,26 +102,102 @@ void	Channel::setInvited(Client &client)
 void	Channel::setInvitedMode(bool status)
 {
 	_inviteMode = status;
+	if (_inviteMode == true)
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Only invited users can join the channel now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	else
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Any user can join the channel now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
 }
 
 void	Channel::setTopicMode(bool status)
 {
 	_topicMode = status;
+	if (_topicMode == true)
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Only operators can change the topic now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	else
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Any members can change the topic now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
 }
 
-void	Channel::setPasswordMode(bool status)
+void	Channel::setPasswordMode(bool status, std::string password)
 {
 	_passwordMode = status;
+	if (_passwordMode == true)
+	{
+		setPassword(password);
+	}
+	else
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Any user can join the channel without a password now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
 }
 
 void	Channel::setOperatorMode(bool status)
 {
 	_operatorMode = status;
+	if (_operatorMode == true)
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Only operators can change channel modes now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	else
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Any members can change channel modes now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
 }
 
-void	Channel::setLimitMode(bool status)
+void	Channel::setLimitMode(bool status, std::string limit)
 {
 	_limitMode = status;
+	if (_limitMode == true)
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Member limit mode has been enabled. Only " + limit + " users can join the channel now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	else
+	{
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = "Member limit mode has been disabled. Any user can join the channel now.\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
+	}
 }
 
 /************************************************************************************/
@@ -255,14 +343,15 @@ void	Channel::removeMember(std::string nickname)
 	{
 		if (it->second->getNickName() == nickname)
 		{
+			int clientFd = it->first;
 			_members.erase(it);
 			std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
-			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+			send(clientFd, message.c_str(), message.size(), 0);
 
 			for (it = _members.begin(); it != _members.end(); it++)
 			{
 				std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
-				send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+				send(clientFd, message.c_str(), message.size(), 0);
 			}
 			return ;
 		}
@@ -278,25 +367,29 @@ void	Channel::removeOperator(Client &client)
 	}
 }
 
-void	Channel::removeOperator(std::string nickname)
+void Channel::removeOperator(std::string nickname)
 {
 	std::map<int, Client*>::iterator it = _operators.begin();
 	while (it != _operators.end())
 	{
 		if (it->second->getNickName() == nickname)
 		{
+			int clientFd = it->first;
 			_operators.erase(it);
-			std::string message = nickname + " had his operator status removed from the " + getChannelName() + ".\n";
-			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+			std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
 
-			for (it = _operators.begin(); it != _operators.end(); it++)
+			send(clientFd, message.c_str(), message.size(), 0);
+
+			for (std::map<int, Client*>::iterator membersIt = _members.begin(); membersIt != _members.end(); ++membersIt)
 			{
-				std::string message = nickname + " had his operator status removed from the " + getChannelName() + ".\n";
-				send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+				if (membersIt->second->getNickName() != nickname)
+				{
+					send(membersIt->second->getClientFd(), message.c_str(), message.size(), 0);
+				}
 			}
-			return ;
+			return;
 		}
-		it++;
+		++it;
 	}
 }
 
@@ -468,7 +561,7 @@ void Channel::memberList(int clientFd) const
 
 //             if (send(clientFd, memberNick.c_str(), memberNick.size(), 0) == -1)
 //             {
-				
+
 // 				std::cerr << "Error sending member list" << std::endl;
 //                 return; // Sai da função em caso de erro
 //             }
@@ -502,7 +595,7 @@ void Channel::broadcastMessage(int sendMessageerFd, const std::string &message)
     }
 }
 
-int Channel::getUsersCount() const 
+int Channel::getUsersCount() const
 {
     return _members.size();
 }

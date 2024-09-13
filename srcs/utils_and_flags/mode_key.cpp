@@ -32,18 +32,17 @@ void	Server::mode_password(Client &client, int clientFd, std::vector<std::string
 
 	if (params[1] == "-k" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
-		it->second.setPasswordMode(false);
-		sendMessage(clientFd, "Any user can join the channel without a password.\n");
+		it->second.setPasswordMode(false, "");
+		// sendMessage(clientFd, "Any user can join the channel without a password.\n");
 		return;
 	}
 
 	if (params.size() == 3 && params[1] == "+k" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
-		it->second.setPasswordMode(true);
-		it->second.setPassword(params[2]);
-		std::cout << "Password Mode: " << it->second.getPasswordMode() << std::endl;
-		std::cout << "Password: " << it->second.getPassword() << std::endl;
-		sendMessage(clientFd, "Only users with the correct password can join the channel.\n");
+		it->second.setPasswordMode(true, params[2]);
+		// std::cout << "Password Mode: " << it->second.getPasswordMode() << std::endl;
+		// std::cout << "Password: " << it->second.getPassword() << std::endl;
+		// sendMessage(clientFd, "Only users with the correct password can join the channel.\n");
 		return;
 	}
 
