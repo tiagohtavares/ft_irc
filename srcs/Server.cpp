@@ -132,15 +132,19 @@ void Server::processClientData(int clientFd)
     buffer = sanitizeInput(buffer);
 
     size_t pos;
-    while ((pos = buffer.find("\r\n")) != std::string::npos)
-    {
-        std::string singleMessage = buffer.substr(0, pos);
-        buffer.erase(0, pos + 2); // Remove processed command including "\r\n"
+	while ((pos = buffer.find_first_of("\r\n")) != std::string::npos)
+	{
+		std::string singleMessage = buffer.substr(0, pos);
+		buffer.erase(0, pos + 1); // Remove o '\r' ou '\n' que foi encontrado
 
-        // Process the complete command
-        splitCmdLine(singleMessage);
-        processClientMessage(clientFd, _cmd, _params);
-    }
+		// Se a próxima posição for o outro caractere (ou seja, '\r\n' encontrado), remove também
+		if (!buffer.empty() && (buffer[0] == '\r' || buffer[0] == '\n')) {
+			buffer.erase(0, 1); // Remove o segundo caractere ('\r' ou '\n')
+		}
+		splitCmdLine(singleMessage);
+		processClientMessage(clientFd, _cmd, _params);
+	}
+
 }
 
 

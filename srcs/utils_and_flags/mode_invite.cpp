@@ -34,12 +34,12 @@ void Server::mode_invite_only(Client &client, int clientFd, std::vector<std::str
 	if (params[1] == "+i" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		it->second.setInvitedMode(true);
-		sendMessage(clientFd, "Only invited users can join the channel.\n");
+		// sendMessage(clientFd, "Only invited users can join the channel.\n");
 	}
 	else if (params[1] == "-i" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		it->second.setInvitedMode(false);
-		sendMessage(clientFd, "Any user can join the channel.\n");
+		// sendMessage(clientFd, "Any user can join the channel.\n");
 	}
 	else
 	{

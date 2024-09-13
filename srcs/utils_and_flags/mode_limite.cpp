@@ -30,14 +30,13 @@ void Server::mode_limit(Client &client, int clientFd, std::vector<std::string> p
 		return;
 	}
 
-	if (params[1] == "-l" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
+	if (params.size() == 2 && params[1] == "-l" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
-		it->second.setLimitMode(false);
-		sendMessage(clientFd, "Member limit mode has been disabled.\n");
+		it->second.setLimitMode(false, "");
+		// sendMessage(clientFd, "Member limit mode has been disabled.\n");
 		return;
 	}
-
-	if (params.size() == 3 && params[1] == "+l" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
+	else if (params.size() == 3 && params[1] == "+l" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		unsigned int limit = std::atoi(params[2].c_str());
 		if (limit <= 0)
@@ -45,12 +44,12 @@ void Server::mode_limit(Client &client, int clientFd, std::vector<std::string> p
 			sendMessage(clientFd, "467 " + client.getNickName() + " " + params[0] + " :Invalid limit. Limit must be greater than 0\n");
 			return;
 		}
-		it->second.setLimitMode(true);
-		it->second.setLimit(limit);
-		sendMessage(clientFd, "Only " + params[2] + " users can join the channel.\n");
+		// it->second.setLimit(limit);
+		it->second.setLimitMode(true, params[2]);
+		// sendMessage(clientFd, "Only " + params[2] + " users can join the channel.\n");
 		return;
 	}
-	if (it->second.getOperatorMode() && !isOpModeAndOpClient)
+	else if (it->second.getOperatorMode() && !isOpModeAndOpClient)
     {
         sendMessage(clientFd, "482 " + client.getNickName() + " " + params[0] + " :You're not channel operator\n");
         return;

@@ -23,9 +23,9 @@ class Channel
 		void			setOperator(Client &client);
 		void			setOperator(std::string client);
 		void			setInvitedMode(bool status);
-		void			setLimitMode(bool status);
+		void			setLimitMode(bool status, std::string limit);
 		void			setOperatorMode(bool status);
-		void			setPasswordMode(bool status);
+		void			setPasswordMode(bool status, std::string password);
 		void			setTopicMode(bool status);
 
 		// void			setBanned(Client &client);

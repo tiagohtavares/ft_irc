@@ -34,12 +34,12 @@ void Server::mode_topic(Client &client, int clientFd, std::vector<std::string> p
 	if (params[1] == "+t" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		it->second.setTopicMode(true);
-		sendMessage(clientFd, "Only operators can change the channel topic.\n");
+		// sendMessage(clientFd, "Only operators can change the channel topic.\n");
 	}
 	else if (params[1] == "-t" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		it->second.setTopicMode(false);
-		sendMessage(clientFd, "Any members can change the channel topic.\n");
+		// sendMessage(clientFd, "Any members can change the channel topic.\n");
 	}
 	else
 	{
