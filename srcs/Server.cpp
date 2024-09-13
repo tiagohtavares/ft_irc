@@ -93,30 +93,56 @@ void Server::run()
 				if (bytesReceived == -1)
 				{
 					std::cerr << "Failed to receive message from client. Error: " << std::endl;
-					cleanup();
+					cleanupClient(_pollfds[i].fd);
 				}
 				else if (bytesReceived == 0)
 				{
 					std::cout << "Client disconnected" << std::endl;
-					cleanup();
+					cleanupClient(_pollfds[i].fd);
 				}
 				else
 				{
-					std::string receivedMessage(buffer, bytesReceived);
-					std::cout << "Received message: " << receivedMessage << std::endl;
-					size_t pos = 0;
-					while ((pos = receivedMessage.find("\r\n")) != std::string::npos)
-					{
-						std::string singleMessage = receivedMessage.substr(0, pos);
-						receivedMessage.erase(0, pos + 2); // Remove the processed message
-						splitCmdLine(singleMessage);
-						processClientMessage(_pollfds[i].fd, _cmd, _params);
-					}
+					// Add received data to the client's buffer
+					_clientBuffers[_pollfds[i].fd] += std::string(buffer, bytesReceived);
+
+					// Process complete commands
+					processClientData(_pollfds[i].fd);
 				}
 			}
 		}
 	}
 }
+
+std::string sanitizeInput(const std::string& input)
+{
+    std::string result;
+    for (size_t i = 0; i < input.size(); ++i) {
+        if (isprint(input[i]) || input[i] == '\r' || input[i] == '\n') {
+            result += input[i];
+        }
+    }
+    return result;
+}
+
+void Server::processClientData(int clientFd)
+{
+    std::string &buffer = _clientBuffers[clientFd];
+
+    // Sanitize input to remove unwanted control characters
+    buffer = sanitizeInput(buffer);
+
+    size_t pos;
+    while ((pos = buffer.find("\r\n")) != std::string::npos)
+    {
+        std::string singleMessage = buffer.substr(0, pos);
+        buffer.erase(0, pos + 2); // Remove processed command including "\r\n"
+
+        // Process the complete command
+        splitCmdLine(singleMessage);
+        processClientMessage(clientFd, _cmd, _params);
+    }
+}
+
 
 void Server::handleNewConnection()
 {
@@ -241,7 +267,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			else if (cmd == "USER" && client.getUserName().empty())
 				user_cmd(client, clientFd, params);
 			else if (cmd == "PRIVMSG")
-				privmsg_cmd(clientFd, params);
+				privmsg_cmd(client,clientFd, params);
 			else if (cmd == "INVITE")
 				invite_cmd(client, clientFd, params);
 			else if (cmd == "MSG")
@@ -355,3 +381,11 @@ void	Server::deleteChannel(std::string &channelName)
 }
 
 
+Channel* Server::getChannelByName(const std::string& name)
+{
+    std::map<std::string, Channel>::iterator it = _channels.find(name);
+    if (it != _channels.end()) {
+        return &(it->second);  // Return a pointer to the channel
+    }
+    return NULL;  // Channel not found
+}

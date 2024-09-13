@@ -38,7 +38,6 @@ class Client
 		void		setRealName(const std::string &realName);
 		void 		setModeInvisible(bool modeInvisible);
 
-
 	private:
 		int			_clientFd;
 		std::string _userName;

@@ -36,6 +36,7 @@ class Server
 		sockaddr_in					_serverAddress;
 		std::vector<struct pollfd>	_pollfds;
 		std::map<int, bool>			_authenticatedClients;
+		std::map<int, std::string> _clientBuffers;
 
 		void	start();
 
@@ -50,7 +51,7 @@ class Server
 		void	listChannels(Client &client);
 		bool	isChannelExist(const std::string &channelName) const;
 		bool	isClientInChannel(std::string &channelName, Client &client);
-
+		Channel* getChannelByName(const std::string& name);
 
 
 
@@ -64,7 +65,7 @@ class Server
 		void	splitCmdLine(std::string input);
 		void 	printParams() const;
 		bool 	isNicknameInUse(const std::string &nick) const;
-
+		void	processClientData(int clientFd);
 
 
 		// --- Commands

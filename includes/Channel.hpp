@@ -74,8 +74,6 @@ class Channel
 
 		bool			isPasswordProtected() const;
 
-		void			broadcastMessage(int sendMessageerFd, const std::string &message);
-
 	private:
 		std::string					_channelName;
 		std::string					_topic;

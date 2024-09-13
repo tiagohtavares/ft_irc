@@ -20,19 +20,12 @@ void Server::privmsg_cmd(Client &client, int clientFd, std::vector<std::string> 
     }
     std::cout << "Message: " << message << std::endl;
 
-    std::string sendMessageerNick = _mapClients[clientFd].getNickName();
-    std::string formattedMessage = ":" + sendMessageerNick + " PRIVMSG " + recipient + " :" + message + "\r\n";
+    std::string sendMessagerNick = _mapClients[clientFd].getNickName();
+    std::string formattedMessage = ":" + sendMessagerNick + " PRIVMSG " + recipient + " :" + message + "\r\n";
 
     if (recipient[0] == '#')  // Check if the recipient is a channel
     {
-        // sendMessage the message to all users in the channel
-        if (_channels.find(recipient) != _channels.end())
-        {
-            Channel &channel = _channels[recipient];
-            channel.broadcastMessage(clientFd, formattedMessage);
-        }
-        else
-            sendMessage(clientFd, "No such channel: " + recipient + ".\n");
+         msg_cmd(client, clientFd, params);
     }
     else // Assume the recipient is a user
     {
@@ -50,7 +43,10 @@ void Server::privmsg_cmd(Client &client, int clientFd, std::vector<std::string> 
             }
         }
         if (!recipientFound)
+        {
+            std::string errorMessage = ":401 " + sendMessagerNick + " " + recipient + " :No such nick/channel\n";
             sendMessage(clientFd, "No such user with nickname " + recipient + ".\n");
+        }
     }
 }
 
