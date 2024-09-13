@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
 		return -1;
 	}
-
+	//Check ports range and numerical.
 	int port = atoi(argv[1]);
 	std::string password = argv[2];
 
