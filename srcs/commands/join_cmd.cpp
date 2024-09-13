@@ -11,6 +11,16 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 	{
 		if (params.front().size() > 51)
 			sendMessage(clientFd, "The channel name cannot exceed 50 characters.\n");
+
+		long unsigned int i = 0;
+		while (i < params.front().size())
+		{
+			params.front()[i] = std::tolower (params.front()[i]);
+			i++;
+		}
+
+		if (params.front().size() > 51)
+			sendMessage(clientFd, "The channel name cannot exceed 50 characters.\n");
 		else if (isChannelExist(params.front()))
 		{
 			std::string channelName = params.front();
@@ -20,7 +30,8 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 				Channel &channel = it->second;
 				if (channel.isMember(client))
 				{
-					sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
+					sendMessage(clientFd, buildWelcomeMessage(channel));
+					//sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
 				}
 				else
 				{
