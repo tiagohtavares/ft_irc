@@ -355,12 +355,12 @@ void Server::createChannel(std::string &channelName, Client &client)
 
 bool Server::isChannelExist(const std::string &channelName) const
 {
-    std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
-    if (it == _channels.end())
-    {
-        return false;
-    }
-    return true;
+	std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		return false;
+	}
+	return true;
 }
 
 bool	Server::isClientInChannel(std::string &channelName, Client &client)

@@ -74,6 +74,11 @@ void Server::mode_operator(Client &client, int clientFd, std::vector<std::string
 		{
 			if (it->second.isOperator(params[2]))
 			{
+				if (it->second.isCreator(params[2]))
+				{
+					sendMessage(clientFd, "The channel creator cannot be removed of operators list\n");
+					return;
+				}
 				it->second.removeOperator(params[2]);
 				// sendMessage(clientFd, params[2] + " is no longer an operator of " + params[0] + "!\n");
 				return;

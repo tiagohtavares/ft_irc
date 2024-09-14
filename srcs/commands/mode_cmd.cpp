@@ -2,6 +2,11 @@
 
 void Server::mode_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
+	if(params.size() < 2)
+	{
+		sendMessage(clientFd, "Error: Not enough parameters.\n");
+		return;
+	}
 	if(params[1] == "+i" || params[1] == "-i")
 		mode_invite_only(client, clientFd, params);
 	else if(params[1] == "+l" || params[1] == "-l")

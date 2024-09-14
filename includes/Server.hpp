@@ -18,8 +18,6 @@
 # include "../includes/Client.hpp"
 # include "../includes/Channel.hpp"
 
-
-
 # define ENDL std::cout << std::endl;
 
 class Server
@@ -73,7 +71,12 @@ class Server
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	privmsg_cmd(Client &client, int clientFd, std::vector<std::string> params);
+
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	handleExistingChannelJoin(Client &client, int clientFd, std::vector<std::string> &params);
+		void	createNewChannel(Client &client, int clientFd, std::vector<std::string> &params);
+		void	leaveAllChannels(Client &client);
+
 		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	quit_cmd(int clientFd);

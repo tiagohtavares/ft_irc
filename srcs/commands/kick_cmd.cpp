@@ -46,16 +46,18 @@ std::vector<std::string> filterPortStrings(std::vector<std::string> params) {
 
 void Server::kick_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
-    if (params.size() < 2)
+    if (params.size() < 3)
     {
         sendMessage(clientFd, "461 KICK :Not enough parameters\r\n");
         return;
     }
 	std::vector<std::string> newParams = filterPortStrings(params);
 
-    std::string channelName = newParams[0];
-    std::string nickName = newParams[1];
+    std::string channelName = newParams[1];
+    std::string nickName = newParams[2];
     // std::string comment = (newParams.size() > 2) ? newParams[2] : "";
+	// std::cout << "Received KICK command: newParams[0]=" << newParams[0] << " newParams[1]=" << newParams[1] << std::endl;
+	// std::cout << "Received KICK command: Channel=" << channelName << " Nickname=" << nickName << std::endl;
 
     if (isChannelExist(channelName))
     {
@@ -65,8 +67,16 @@ void Server::kick_cmd(Client &client, int clientFd, std::vector<std::string> par
             Channel& channel = it->second;
             if (channel.isOperator(client))
             {
-                if (channel.isMember(nickName))
+				if (channel.isCreator(nickName))
+				{
+					sendMessage(clientFd, channelName + " :You can't kick the creator of the channel\r\n");
+				}
+                else if (channel.isMember(nickName))
                 {
+					// Remove o membro do canal
+                    channel.removeMember(nickName);
+					if (channel.isOperator(nickName))
+						channel.removeOperator(nickName);
                     // Envia a mensagem KICK para todos os membros do canal
                     std::string kickMessage = ":" + client.getNickName() + " KICK " + channelName + " " + nickName;
                     // if (!comment.empty())
@@ -76,8 +86,6 @@ void Server::kick_cmd(Client &client, int clientFd, std::vector<std::string> par
                     // Notifica o cliente que executou o comando
                     sendMessage(clientFd, "You have kicked " + nickName + " from channel " + channelName + ".\r\n");
 
-					// Remove o membro do canal
-                    channel.removeMember(nickName);
                 }
                 else
                 {
