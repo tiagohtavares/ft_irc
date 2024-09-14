@@ -74,6 +74,7 @@ class Server
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	privmsg_cmd(Client &client,int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	notifyChannelJoin(const Client &client, int clientFd, Channel &channel);
 		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	quit_cmd(int clientFd);
@@ -93,7 +94,7 @@ class Server
 		void	mode_limit(Client &client, int clientFd, std::vector<std::string> params);
 
 		//ultis
-		void sendMessage(int fd, const std::string& message);
+		void sendMessage(int fd, const std::string message);
 		void sendWelcomeMessageServe(int fd);
 		std::string buildWelcomeMessage(Channel &channel);
 		void sendToChannel(const std::string& channelName, const std::string& message);
