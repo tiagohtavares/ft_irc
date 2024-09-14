@@ -94,6 +94,7 @@ class Server
 
 		//ultis
 		void sendMessage(int fd, const std::string& message);
+		void sendWelcomeMessageServe(int fd);
 		std::string buildWelcomeMessage(Channel &channel);
 		void sendToChannel(const std::string& channelName, const std::string& message);
 };

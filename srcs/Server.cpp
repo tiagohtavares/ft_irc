@@ -183,6 +183,7 @@ void Server::handleNewConnection()
 	_authenticatedClients[clientFd] = false;
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
+	sendWelcomeMessageServe(clientFd);
 }
 
 void Server::splitCmdLine(std::string input)

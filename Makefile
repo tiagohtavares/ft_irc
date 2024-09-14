@@ -15,9 +15,10 @@
 # *VARIABLES
 # *==============================================================================
 
+
 NAME		:=	ircserv
 CXX			:=	c++
-CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g -lreadline
+CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g 
 HEADERS		:=	./includes/main.hpp ./includes/Client.hpp ./includes/Channel.hpp ./includes/Server.hpp
 SRCS		:=	./srcs/main.cpp \
 				./srcs/Client.cpp \
@@ -38,6 +39,7 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/commands/invite_cmd.cpp \
 				./srcs/commands/mode_cmd.cpp \
 				./srcs/utils_and_flags/messages.cpp \
+				./srcs/utils_and_flags/messages_hello_serve.cpp \
 				./srcs/utils_and_flags/mode_invite.cpp \
 				./srcs/utils_and_flags/mode_key.cpp \
 				./srcs/utils_and_flags/mode_limite.cpp \
@@ -92,3 +94,4 @@ fclean:		clean
 re:			fclean all
 
 .PHONY:		all clean fclean re
+
