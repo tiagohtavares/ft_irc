@@ -72,14 +72,14 @@ class Server
 		void	pass_cmd(int clientFd, std::vector<std::string> params);
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		void	privmsg_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	privmsg_cmd(Client &client,int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	quit_cmd(int clientFd);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	names_cmd(int clientFd, std::vector<std::string> params);
-		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params) const;
+		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
 
 		Client* findClientByNickname(const std::string &nickname);

@@ -25,7 +25,7 @@ void Server::privmsg_cmd(Client &client, int clientFd, std::vector<std::string> 
 
     if (recipient[0] == '#')  // Check if the recipient is a channel
     {
-         msg_cmd(client, clientFd, params);
+        msg_cmd(client, clientFd, params);
     }
     else // Assume the recipient is a user
     {
