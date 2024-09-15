@@ -25,7 +25,8 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 				Channel &channel = it->second;
 				if (channel.isMember(client))
 				{
-					sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
+					std::cout << "JOIN ---> User is already a member of the channel\n";
+					sendMessage(client.getClientFd(), _channels[params.front()].getTopic() + "\n");
 				}
 				else
 				{
@@ -157,6 +158,8 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 		sendMessage(clientFd, "Invalid JOIN command. Connection will be closed.\n");
 	}
 }
+
+
 
 // // 3.2.1 Join message
 

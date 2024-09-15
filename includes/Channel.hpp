@@ -51,12 +51,14 @@ class Channel
 		bool			getLimitMode() const;
 
 		void			insertOperator(Client &client);
+		void			insertCreator(Client &client);
 		void			insertMember(Client &client);
 		// void			insertBanned(Client &client);
 		void			insertInvited(Client &client);
 
 		void			removeOperator(Client &client);
 		void			removeOperator(std::string client);
+		void			removeCreator(Client &client);
 		void			removeMember(Client &client);
 		void			removeMember(std::string nickname);
 		void			removeBanned(Client &client);
@@ -64,6 +66,7 @@ class Channel
 
 		bool			isOperator(const Client& client) const;
 		bool			isOperator(std::string nickname) const;
+		bool			isCreator(const Client& client) const;
 		bool			isCreator(std::string nickname) const;
 		bool			isMember(const Client& client) const;
 		bool			isMember(std::string nickname) const;
@@ -76,6 +79,8 @@ class Channel
 		void			invitedList() const;
 
 		bool			isPasswordProtected() const;
+
+		void			sendMessageToMembers(const std::string &message) const;
 
 	private:
 		std::string					_channelName;

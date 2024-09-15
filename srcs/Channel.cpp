@@ -41,6 +41,11 @@ void	Channel::setTopic(std::string &topic)
 	std::string	channelTitle;
 	channelTitle = getChannelName() + ": ";
 	_topic =  channelTitle + topic;
+	for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+	{
+		std::string message = "Topic updated: " + getTopic() + "\n";
+		send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+	}
 }
 
 void	Channel::setPassword(std::string &password)
@@ -63,6 +68,11 @@ void	Channel::setOperator(Client &client)
 	if (_members.find(client.getClientFd()) != _members.end() && _operators.find(client.getClientFd()) == _operators.end() && _banned.find(client.getClientFd()) == _banned.end())
 	{
 		_operators.insert(std::make_pair(client.getClientFd(), &client));
+		for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = client.getNickName() + " is now an operator of " + getChannelName() + ".\n";
+			send(it->second->getClientFd(), message.c_str(), message.size(), 0);
+		}
 	}
 }
 
@@ -313,7 +323,15 @@ void Channel::insertMember(Client &client)
 			removeBanned(client);
 		}
 		_members.insert(std::make_pair(client.getClientFd(), &client));
-    }
+	}
+	for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+	{
+		if (it->second->getNickName() != client.getNickName())
+		{
+			std::string message = client.getNickName() + " joined the " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
+	}
 }
 
 void	Channel::insertOperator(Client &client)
@@ -321,6 +339,19 @@ void	Channel::insertOperator(Client &client)
 	if (_members.find(client.getClientFd()) != _members.end() && _operators.find(client.getClientFd()) == _operators.end() && _banned.find(client.getClientFd()) == _banned.end())
 	{
 		_operators.insert(std::make_pair(client.getClientFd(), &client));
+		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+		{
+			std::string message = client.getNickName() + " is now an operator of " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
+	}
+}
+
+void	Channel::insertCreator(Client &client)
+{
+	if (_members.find(client.getClientFd()) != _members.end() && _creator.find(client.getClientFd()) == _creator.end() && _banned.find(client.getClientFd()) == _banned.end())
+	{
+		_creator.insert(std::make_pair(client.getClientFd(), &client));
 	}
 }
 
@@ -341,8 +372,11 @@ void	Channel::removeMember(Client &client)
 	if (_members.find(client.getClientFd()) != _members.end())
 	{
 		_members.erase(client.getClientFd());
-		std::string message = "You have been removed from channel " + getChannelName() + ".\n";
-		send(client.getClientFd(), message.c_str(), message.size(), 0);
+		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); it++)
+		{
+			std::string message = client.getNickName() + " has been removed from channel " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
 	}
 }
 
@@ -353,15 +387,11 @@ void	Channel::removeMember(std::string nickname)
 	{
 		if (it->second->getNickName() == nickname)
 		{
-			int clientFd = it->first;
 			_members.erase(it);
-			// std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
-			// send(clientFd, message.c_str(), message.size(), 0);
-
 			for (it = _members.begin(); it != _members.end(); it++)
 			{
 				std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
-				send(clientFd, message.c_str(), message.size(), 0);
+				send(it->first, message.c_str(), message.size(), 0);
 			}
 			return ;
 		}
@@ -374,6 +404,11 @@ void	Channel::removeOperator(Client &client)
 	if (_operators.find(client.getClientFd()) != _operators.end())
 	{
 		_operators.erase(client.getClientFd());
+		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+		{
+			std::string message = client.getNickName() + " is no longer an opetator of " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
 	}
 }
 
@@ -384,22 +419,36 @@ void Channel::removeOperator(std::string nickname)
 	{
 		if (it->second->getNickName() == nickname)
 		{
-			// int clientFd = it->first;
 			_operators.erase(it);
-			// std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
-			// send(clientFd, message.c_str(), message.size(), 0);
-
-			for (std::map<int, Client*>::iterator membersIt = _members.begin(); membersIt != _members.end(); ++membersIt)
+			for (it = _members.begin(); it != _members.end(); ++it)
 			{
-				if (membersIt->second->getNickName() != nickname)
-				{
-					std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
-					send(membersIt->second->getClientFd(), message.c_str(), message.size(), 0);
-				}
+				std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
+				send(it->first, message.c_str(), message.size(), 0);
 			}
+			// for (std::map<int, Client*>::iterator membersIt = _members.begin(); membersIt != _members.end(); ++membersIt)
+			// {
+			// 	if (membersIt->second->getNickName() != nickname)
+			// 	{
+			// 		std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
+			// 		send(membersIt->second->getClientFd(), message.c_str(), message.size(), 0);
+			// 	}
+			// }
 			return;
 		}
 		++it;
+	}
+}
+
+void	Channel::removeCreator(Client &client)
+{
+	if (_creator.find(client.getClientFd()) != _creator.end())
+	{
+		_creator.erase(client.getClientFd());
+		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+		{
+			std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
 	}
 }
 
@@ -408,6 +457,11 @@ void	Channel::removeBanned(Client &client)
 	if (_banned.find(client.getClientFd()) != _banned.end())
 	{
 		_banned.erase(client.getClientFd());
+		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+		{
+			std::string message = client.getNickName() + " is no longer an banned of " + getChannelName() + ".\n";
+			send(it->first, message.c_str(), message.size(), 0);
+		}
 	}
 }
 
@@ -474,6 +528,11 @@ bool	Channel::isOperator(std::string nickname) const
 		it++;
 	}
 	return false;
+}
+
+bool	Channel::isCreator(const Client& client) const
+{
+	return _creator.find(client.getClientFd()) != _creator.end();
 }
 
 bool	Channel::isCreator(std::string nickname) const
@@ -609,4 +668,12 @@ void	Channel::invitedList() const
 int Channel::getUsersCount() const
 {
     return _members.size();
+}
+
+void	Channel::sendMessageToMembers(const std::string &message) const
+{
+	for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); it++)
+	{
+		send(it->first, message.c_str(), message.size(), 0);
+	}
 }
