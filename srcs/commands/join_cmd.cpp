@@ -90,7 +90,6 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 							}
 							else
 							{
-                                std::cout << "entrei aqui\n";
                                 _channels[channelName].insertMember(client);
                                 std::string joinMessage = ":" + client.getNickName() + " JOIN " + it->second.getChannelName() + "\r\n";
                                 sendToChannel(it->second.getChannelName(), joinMessage);
@@ -103,10 +102,10 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 		else
 		{
             createChannel(params.front(), client);
-            // std::string channelName = params.front();
-            // std::map<std::string, Channel>::iterator it = _channels.find(channelName);	
-            // std::string joinMessage = ":" + client.getNickName() + " JOIN " + it->second.getChannelName() + "\r\n";
-            // sendMessage(clientFd, joinMessage);
+            std::string channelName = params.front();
+            std::map<std::string, Channel>::iterator it = _channels.find(channelName);	
+            std::string joinMessage = ":" + client.getNickName() + " JOIN " + it->second.getChannelName() + "\r\n";
+            sendMessage(clientFd, joinMessage);
                                 
 		}
 		params.pop_back();
