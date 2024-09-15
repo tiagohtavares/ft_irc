@@ -285,8 +285,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				part_cmd(client, clientFd, params);
 			else if (cmd == "KICK")
 				kick_cmd(client, clientFd, params);
-			// else if (cmd == "MODE")
-			// 	mode_cmd(client, clientFd, params);
+			else if (cmd == "MODE" && params.size() >= 2)
+				mode_cmd(client, clientFd, params);
 			else if (cmd == "LIST")
 				listChannels(client);
 			else if (cmd == "NAMES")

@@ -11,20 +11,24 @@ void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> pa
 		{
 			const std::map<int, Client*> &members = it->second.getMembers();
 
+			const std::map<int, Client*> &membersOperators = it->second.getOperators();
+			
 			// Criar a lista de nicks dos membros do canal
-			std::string nicknames;
+			std::string nicknames = it->second.memberList();
 			for (std::map<int, Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt)
 			{
 				std::string nickname = memberIt->second->getNickName();
 				
-				if (it->second.getOperators().find(clientFd) != it->second.getOperators().end()) 
+				if (it->second.isOperator(client) == 1) 
 				{
-					nickname = "@" + nickname; // Adiciona o prefixo '@' ao operador
+    				nickname = "@" + nickname; // Adiciona o prefixo '@' ao operador
 				}
 
-				if (!nicknames.empty())
-					nicknames += " ";
-				nicknames += nickname;
+				// if (!nicknames.empty())
+				// 	nicknames += " ";
+				// nicknames += nickname;
+
+				std::cout << nicknames << "\n";
 			}
 
 			// Enviar a resposta NAMES (código 353)
