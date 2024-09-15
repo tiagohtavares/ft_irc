@@ -1,22 +1,73 @@
 #include "../../includes/Server.hpp"
 
-void	Server::names_cmd(int clientFd, std::vector<std::string> params) 
+void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> params) 
 {
 	if (params.size() == 1)
 	{
-		std::map<std::string, Channel>::iterator it = _channels.find(params[0]);
+		std::string channelName = params[0];
+		std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+		
 		if (it != _channels.end())
 		{
-			_channels[params[0]].memberList(clientFd);
+			const std::map<int, Client*> &members = it->second.getMembers();
+
+			// Criar a lista de nicks dos membros do canal
+			std::string nicknames;
+			for (std::map<int, Client*>::const_iterator memberIt = members.begin(); memberIt != members.end(); ++memberIt)
+			{
+				std::string nickname = memberIt->second->getNickName();
+				
+				if (it->second.getOperators().find(clientFd) != it->second.getOperators().end()) 
+				{
+					nickname = "@" + nickname; // Adiciona o prefixo '@' ao operador
+				}
+
+				if (!nicknames.empty())
+					nicknames += " ";
+				nicknames += nickname;
+			}
+
+			// Enviar a resposta NAMES (código 353)
+			std::string namesResponse = ":server 353 " + client.getNickName() + " = " + channelName + " :" + nicknames + "\r\n";
+			send(clientFd, namesResponse.c_str(), namesResponse.size(), 0);
+
+			// Enviar a mensagem de fim de lista de nomes (código 366)
+			std::string endOfNames = ":server 366 " + client.getNickName() + " " + channelName + " :End of /NAMES list.\r\n";
+			send(clientFd, endOfNames.c_str(), endOfNames.size(), 0);
 		}
 		else
 		{
-			sendMessage(clientFd, "403 " + params[0] + " :No such channel\n");
+			
+			sendMessage(clientFd, "403 " + channelName + " :No such channel\n");// Se o canal não existe, enviar mensagem de erro (código 403)
 		}
 	}
 	else
-		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");
+	{
+		
+		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");// Enviar erro 461 se faltar parâmetros
+	}
 }
+
+
+
+
+// void	Server::names_cmd(int clientFd, std::vector<std::string> params) 
+// {
+// 	if (params.size() == 1)
+// 	{
+// 		std::map<std::string, Channel>::iterator it = _channels.find(params[0]);
+// 		if (it != _channels.end())
+// 		{
+// 			_channels[params[0]].memberList(clientFd);
+// 		}
+// 		else
+// 		{
+// 			sendMessage(clientFd, "403 " + params[0] + " :No such channel\n");
+// 		}
+// 	}
+// 	else
+// 		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");
+// }
 
 // 3.2.5 Mensagem de nomes
 

@@ -47,7 +47,7 @@ void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> para
 			{
 				if (memberIt->first != clientFd)
 				{
-					std::string formattedMessage = ":" + client.getNickName() + "!" + client.getUserName() + "@" + "test" + " PRIVMSG " + channel.getChannelName() + " :" + message;
+					std::string formattedMessage = ":" + client.getNickName() + "!" + client.getUserName() + "@" + "hostname" + " PRIVMSG " + channel.getChannelName() + " :" + message;
 					send(memberIt->first, formattedMessage.c_str(), formattedMessage.size(), 0);
 				}
 			}

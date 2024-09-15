@@ -290,7 +290,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			else if (cmd == "LIST")
 				listChannels(client);
 			else if (cmd == "NAMES")
-				names_cmd(clientFd, params);
+				names_cmd(client, clientFd, params);
 			else if(cmd == "QUIT")
 				quit_cmd(clientFd);
 			else if (cmd.empty() && params.empty())
