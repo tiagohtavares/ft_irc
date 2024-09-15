@@ -111,67 +111,6 @@ void	Server::join_cmd(Client &client, int clientFd, std::vector<std::string> par
 		params.pop_back();
 	}
 }
-// 	// JOIN #channel_name channel_password
-// 	else if ((params.size() == 2) && (params[0].size() == 1) && ((params[0][0] == '#') || (params[0][0] == '&')))
-// 		sendMessage(clientFd, "/JOIN <#channel_name> <channel_password>\n");
-// 	else if (params.size() == 2 && params[0].size() > 1 && ((params[0][0] == '#' && params[0][1] == '#') ||
-// 	(params[0][0] == '&' && params[0][1] == '&')))
-// 		sendMessage(clientFd, "The channel name cannot start with # or &.\n");
-// 	else if (params.size() == 2 && params[0].size() > 1 && (params[0][0] == '#' || params[0][0] == '&'))
-// 	{
-// 		if (params[0].size() > 51)
-// 		{
-// 			sendMessage(clientFd, "The channel name cannot exceed 50 characters.\n");
-// 			return;
-// 		}
-// 		if (isChannelExist(params[0]))
-// 		{
-// 			std::map<std::string, Channel>::iterator it = _channels.find(params[0]);
-// 			if (it !=_channels.end())
-// 			{
-// 				if (params[1]  == _channels[params[0]].getPassword())
-// 				{
-// 					// Handle the case where the channel have a limit of members
-// 					if (_channels[params[0]].getLimitMode() == true)
-// 					{
-// 						if (_channels[params[0]].getMembers().size() >= _channels[params[0]].getLimit())
-// 						{
-// 							sendMessage(clientFd, "The channel is full. You cannot join.\n");
-// 							return;
-// 						}
-// 						else
-// 						{
-// 							_channels[params[0]].insertMember(client);
-// 							sendMessage(clientFd, buildWelcomeMessage(it->second));
-// 						}
-// 					}
-// 					else
-// 					{
-// 						_channels[params[0]].insertMember(client);
-// 						sendMessage(clientFd, buildWelcomeMessage(it->second));
-// 					}
-// 				}
-// 				else
-// 				{
-// 					sendMessage(clientFd, "Invalid password.\n");
-// 				}
-// 			}
-// 		}
-// 		else
-// 		{
-// 			// join #canal pwd
-// 			createChannel(params.front(), client);
-// 			_channels[params[0]].setPasswordMode(true, params[1]);
-// 			// _channels[params[0]].setPassword(params[1]);
-// 		}
-// 		while (params.size() > 0)
-// 			params.pop_back();
-// 	}
-// 	else
-// 	{
-// 		sendMessage(clientFd, "Invalid JOIN command. Connection will be closed.\n");
-// 	}
-// }
 
 // 3.2.1 Join message
 
