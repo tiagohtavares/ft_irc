@@ -23,6 +23,7 @@ class Channel
 		void			setOperator(Client &client);
 		void			setOperator(std::string client);
 		void			setCreator(Client &client);
+		void			setCreator(std::string nickname);
 		void			setInvitedMode(bool status);
 		void			setLimitMode(bool status, std::string limit);
 		void			setOperatorMode(bool status);
@@ -74,7 +75,7 @@ class Channel
 		bool			isBanned(std::string nickname) const;
 		bool			isInvited(const Client& client) const;
 
-		void			memberList(int clientFd) const;
+		std::string		memberList() const;
 		void			bannedList() const;
 		void			invitedList() const;
 

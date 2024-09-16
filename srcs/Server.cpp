@@ -183,6 +183,7 @@ void Server::handleNewConnection()
 	_authenticatedClients[clientFd] = false;
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
+	sendWelcomeMessageServe(clientFd);
 }
 
 void Server::splitCmdLine(std::string input)
@@ -289,9 +290,9 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			else if (cmd == "LIST")
 				listChannels(client);
 			else if (cmd == "NAMES")
-				names_cmd(clientFd, params);
+				names_cmd(client, clientFd, params);
 			else if(cmd == "QUIT")
-				quit_cmd(clientFd);
+				quit_cmd(client);
 			else if (cmd.empty() && params.empty())
 				return;
 			else
@@ -392,4 +393,54 @@ Channel* Server::getChannelByName(const std::string& name)
         return &(it->second);  // Return a pointer to the channel
     }
     return NULL;  // Channel not found
+}
+
+void	Server::leaveAllChannels(Client &client)
+{
+	std::map<std::string, Channel>::iterator itChannel = _channels.begin();
+	while (itChannel != _channels.end())
+	{
+		if (!itChannel->second.getMembers().empty() && itChannel->second.isMember(client))
+		{
+			std::string leaveMessage = ":" + client.getNickName() + " PART " + itChannel->second.getChannelName() + "\r\n";
+
+			if (itChannel->second.isCreator(client))
+			{
+				itChannel->second.removeCreator(client);
+				itChannel->second.removeOperator(client);
+				itChannel->second.removeMember(client);
+
+				if (!itChannel->second.getMembers().empty())
+				{
+					// Nao esta a atribuir o novo criador correto. Volta a atribuir para o primeiro membro do canal !!!!!
+					itChannel->second.setCreator(itChannel->second.getMembers().begin()->second->getNickName());
+				}
+			}
+			else if (itChannel->second.isOperator(client))
+			{
+				itChannel->second.removeOperator(client);
+				itChannel->second.removeMember(client);
+			}
+			else
+			{
+				itChannel->second.removeMember(client);
+			}
+			if (itChannel->second.getMembers().empty())
+			{
+				std::map<std::string, Channel>::iterator itToErase = itChannel;
+				++itChannel;
+				_channels.erase(itToErase);
+				continue;
+			}
+			else
+			{
+				sendToChannel(itChannel->second.getChannelName(), leaveMessage);
+			}
+		}
+		if (_channels.empty())
+		{
+			break;
+		}
+		++itChannel;
+	}
 }

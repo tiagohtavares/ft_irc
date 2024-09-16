@@ -1,22 +1,60 @@
 #include "../../includes/Server.hpp"
 
-void	Server::names_cmd(int clientFd, std::vector<std::string> params) 
+// std::vector<std::string> split(const std::string& str, const std::string& delimiter)
+// {
+//     std::vector<std::string> tokens;
+//     std::string token;
+//     size_t start = 0;
+//     size_t end = str.find(delimiter);
+
+//     while (end != std::string::npos)
+// 	{
+//         token = str.substr(start, end - start);
+//         tokens.push_back(token);
+//         start = end + delimiter.length();
+//         end = str.find(delimiter, start);
+//     }
+//     // Adicionar o último token
+//     token = str.substr(start);
+//     tokens.push_back(token);
+
+//     return tokens;
+// }
+
+void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
 	if (params.size() == 1)
 	{
-		std::map<std::string, Channel>::iterator it = _channels.find(params[0]);
+		std::string channelName = params[0];
+		std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+
 		if (it != _channels.end())
 		{
-			_channels[params[0]].memberList(clientFd);
+			std::string nicknames = it->second.memberList(); // Criar a lista de nicks dos membros do canal
+			std::vector<std::string> nicknamesSplit = split(nicknames, " ");
+			for(size_t  i = 0; i < nicknamesSplit.size(); ++i)
+			{
+				std::string namesResponse = ":server 353 " + client.getNickName() + " = " + channelName + " :" + nicknamesSplit[i] + "\r\n";
+				send(clientFd, namesResponse.c_str(), namesResponse.size(), 0);
+				std::cout << "nick: "<< nicknamesSplit[i] << "\n";
+			}
+			// Enviar a mensagem de fim de lista de nomes (código 366)
+			std::string endOfNames = ":server 366 " + client.getNickName() + " " + channelName + " :End of /NAMES list.\r\n";
+			send(clientFd, endOfNames.c_str(), endOfNames.size(), 0);
 		}
 		else
 		{
-			sendMessage(clientFd, "403 " + params[0] + " :No such channel\n");
+
+			sendMessage(clientFd, "403 " + channelName + " :No such channel\n");// Se o canal não existe, enviar mensagem de erro (código 403)
 		}
 	}
 	else
-		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");
+	{
+
+		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");// Enviar erro 461 se faltar parâmetros
+	}
 }
+
 
 // 3.2.5 Mensagem de nomes
 

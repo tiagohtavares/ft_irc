@@ -36,7 +36,12 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 				send(client.getClientFd(), message.c_str(), message.size(), 0);
 			}
 			else
-				sendMessage(clientFd, "You are not in the " + params[0] + " channel.\n");
+			{
+				if (client.getClientFd() != -1)
+				{
+					sendMessage(clientFd, "You are not in the " + params[0] + " channel.\n");
+				}
+			}
 		}
 		else
 			sendMessage(clientFd, "The " + params[0] + " channel does not exist.\n");
