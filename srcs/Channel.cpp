@@ -117,7 +117,7 @@ void	Channel::setInvited(Client &client)
 
 void	Channel::setCreator(std::string nickname)
 {
-	std::cout << "[serCreator] nickname: " << nickname << std::endl;
+	std::cout << "[setCreator] nickname: " << nickname << std::endl;
 	if (isMember(nickname) && !isBanned(nickname))
 	{
 		std::map<int, Client*>::const_iterator it = _members.begin();
@@ -138,6 +138,7 @@ void	Channel::setCreator(std::string nickname)
 			it++;
 		}
 	}
+	std::cout << "[getNewCreator] nickname: " << getCreator().begin()->second->getNickName() << std::endl;
 }
 
 void	Channel::setInvitedMode(bool status)

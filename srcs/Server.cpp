@@ -410,11 +410,22 @@ void	Server::leaveAllChannels(Client &client)
 				itChannel->second.removeOperator(client);
 				itChannel->second.removeMember(client);
 
-				if (!itChannel->second.getMembers().empty())
-				{
-					// Nao esta a atribuir o novo criador correto. Volta a atribuir para o primeiro membro do canal !!!!!
-					itChannel->second.setCreator(itChannel->second.getMembers().begin()->second->getNickName());
-				}
+				// if (!itChannel->second.getMembers().empty())
+				// {
+				// 	std::map<int, Client*>::iterator it = itChannel->second.getMembers().begin();
+				// 	std::cout << "New creator: " << it->second->getNickName() << std::endl;
+
+				// 	if (!itChannel->second.getOperators().empty())
+				// 	{
+				// 		it = itChannel->second.getOperators().begin();
+				// 		itChannel->second.setCreator(it->second->getNickName());
+				// 	}
+				// 	else
+				// 	{
+				// 		itChannel->second.setCreator(it->second->getNickName());
+				// 		itChannel->second.setOperator(it->second->getNickName());
+				// 	}
+				// }
 			}
 			else if (itChannel->second.isOperator(client))
 			{
