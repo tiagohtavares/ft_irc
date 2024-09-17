@@ -87,6 +87,8 @@ class Server
 		// void	quit_cmd(int clientFd);
 		void	quit_cmd(Client &client);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void 	kick_cmd_server(Client &client, int clientFd, std::vector<std::string> params);
+		void 	kick_cmd_channel(Client &client, int clientFd, std::vector<std::string> params);
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
 

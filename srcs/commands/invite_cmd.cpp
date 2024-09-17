@@ -53,7 +53,25 @@ void Server::invite_cmd(Client &client, int clientFd, std::vector<std::string> p
             sendMessage(clientFd, "Error: User " + targetNickname + " is already a member of the channel. \n");
             return;
         }
-		if (_channels[channelName].getOperatorMode() == false || _channels[channelName].isOperator(client))
+		if (_channels[channelName].getOperatorMode() == true)
+		{
+			if (_channels[channelName].isOperator(client))
+			{
+				_channels[channelName].setInvited(*targetClient);
+				// Enviar convite para o usuário convidado
+				sendMessage(targetClient->getClientFd(), "You have been invited to join the channel " + channelName + " by " + client.getNickName() + ".\n");
+				buildWelcomeMessage(channel);
+
+				// Notificar o cliente que o convite foi enviado
+				sendMessage(clientFd, "Invitation sent to " + targetNickname + " for channel " + channelName + ".\n");
+			}
+			else
+			{
+				sendMessage(clientFd, "Error: You must be an operator to invite users to the channel " + channelName + ". \n");
+				return;
+			}
+		}
+		else
 		{
 			_channels[channelName].setInvited(*targetClient);
 			// Enviar convite para o usuário convidado

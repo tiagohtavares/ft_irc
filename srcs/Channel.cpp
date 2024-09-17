@@ -12,7 +12,7 @@ Channel::Channel(std::string &channelName, Client &client)
 	setChannelName(channelName);
 	setInvitedMode(false);
 	setLimitMode(false, "");
-	setOperatorMode(false);
+	setOperatorMode(true);
 	setPasswordMode(false, "");
 	setTopicMode(false);
 	insertMember(client);
