@@ -144,7 +144,6 @@ void Server::processClientData(int clientFd)
 		splitCmdLine(singleMessage);
 		processClientMessage(clientFd, _cmd, _params);
 	}
-
 }
 
 
@@ -312,6 +311,7 @@ void Server::cleanupClient(int clientFd) {
 	std::cout << "Cleaning up client " << clientFd << std::endl;
 	close(clientFd);
 	_authenticatedClients.erase(clientFd);
+	_clientBuffers[clientFd].clear();
 	_mapClients.erase(clientFd);
 
 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)

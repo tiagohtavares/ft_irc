@@ -2,12 +2,16 @@
 
 void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
-	if (params.size() == 2)
+	if (params.size() == 0 || params.size() == 1)
 	{
 		if (isChannelExist(params[0]))
 		{
 			if (isClientInChannel(params[0], client))
 			{
+				std::string errorMessage = ":442 " + client.getNickName() + " " + _channels[params[0]].getChannelName() + " :You're not on that channel\n";
+				// std::string errorMessage = ":442 You have left channel" + _channels[params[0]].getChannelName() + " (Leaving) \n";
+				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+
 				if (_channels[params[0]].isCreator(client))
 				{
 					_channels[params[0]].removeCreator(client);
@@ -19,12 +23,6 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 						deleteChannel(params[0]);
 						return;
 					}
-					// _channels[params[0]].setCreator(*_channels[params[0]].getMembers().begin()->second);
-					// _channels[params[0]].setOperator(*_channels[params[0]].getMembers().begin()->second);
-
-					// std::string message = "The " + _channels[params[0]].getMembers().begin()->second->getNickName() + " has inherited channel creator status.\n";
-
-					// _channels[params[0]].sendMessageToMembers(message);
 				}
 				else if (_channels[params[0]].isOperator(client))
 				{
@@ -37,8 +35,7 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 					_channels[params[0]].removeMember(client);
 					_channels[params[0]].removeInvited(client);
 				}
-				std::string message = "You left the " + _channels[params[0]].getChannelName() + " channel.\n";
-				send(client.getClientFd(), message.c_str(), message.size(), 0);
+				return;
 			}
 			else
 			{
