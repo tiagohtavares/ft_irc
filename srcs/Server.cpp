@@ -1,5 +1,16 @@
 #include "../includes/Server.hpp"
 
+volatile bool g_running = true;
+
+void signalHandler(int signum)
+{
+    if (signum == SIGINT)
+	{
+        std::cout << "\nSIGINT received. Shutting down gracefully...\n";
+        g_running = false;  // Set the running flag to false
+    }
+}
+
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1), _mapClients(), _cmd(), _params()
 {
 	Channel defaultChannel;
@@ -58,16 +69,14 @@ void Server::start()
 void Server::run()
 {
 	start();
-
+	signal(SIGINT, signalHandler);
 	struct pollfd serverPollFd;
 	serverPollFd.fd = _server_fd;
 	serverPollFd.events = POLLIN; // Monitor for incoming connections
 	serverPollFd.revents = 0;
 	_pollfds.push_back(serverPollFd);
 
-	bool running = true;
-
-	while (running)
+	while (g_running)
 	{
 		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
 		if (pollResult == -1)

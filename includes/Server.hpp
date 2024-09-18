@@ -12,7 +12,9 @@
 #include <queue>
 #include <cerrno>
 # include <sstream>
-
+#include <iostream>
+#include <csignal>  // For signal handling
+#include <cstdlib>  // For exit()
 # include <set>
 
 # include "../includes/Client.hpp"
@@ -21,6 +23,8 @@
 
 
 # define ENDL std::cout << std::endl;
+
+
 
 class Server
 {
@@ -37,7 +41,6 @@ class Server
 		std::vector<struct pollfd>	_pollfds;
 		std::map<int, bool>			_authenticatedClients;
 		std::map<int, std::string> _clientBuffers;
-
 		void	start();
 
 		// Client management
