@@ -1,5 +1,16 @@
 #include "../includes/Server.hpp"
 
+volatile bool g_running = true;
+
+void signalHandler(int signum)
+{
+    if (signum == SIGINT)
+	{
+        std::cout << "\nSIGINT received. Shutting down gracefully...\n";
+        g_running = false;  // Set the running flag to false
+    }
+}
+
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _server_fd(-1), _mapClients(), _cmd(), _params()
 {
 	Channel defaultChannel;
@@ -58,16 +69,14 @@ void Server::start()
 void Server::run()
 {
 	start();
-
+	signal(SIGINT, signalHandler);
 	struct pollfd serverPollFd;
 	serverPollFd.fd = _server_fd;
 	serverPollFd.events = POLLIN; // Monitor for incoming connections
 	serverPollFd.revents = 0;
 	_pollfds.push_back(serverPollFd);
 
-	bool running = true;
-
-	while (running)
+	while (g_running)
 	{
 		int pollResult = poll(_pollfds.data(), _pollfds.size(), -1);
 		if (pollResult == -1)
@@ -144,6 +153,7 @@ void Server::processClientData(int clientFd)
 		splitCmdLine(singleMessage);
 		processClientMessage(clientFd, _cmd, _params);
 	}
+
 }
 
 
@@ -178,11 +188,12 @@ void Server::handleNewConnection()
 
 	// Store the new client
 	client.setClientFd(clientFd);
+	client.setClientAddress(inet_ntoa(clientAddress.sin_addr));
 	_mapClients[clientFd] = client;
 	_authenticatedClients[clientFd] = false;
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
-	sendWelcomeMessageServe(clientFd);
+	// sendWelcomeMessageServe(clientFd);
 }
 
 void Server::splitCmdLine(std::string input)
@@ -261,8 +272,9 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 		if(!_authenticatedClients[clientFd])
 		{
 			if (cmd == "CAP"){return;}
-			else
-				pass_cmd(clientFd, params);
+			else if (cmd == "PASS"){pass_cmd(clientFd, params);return;}
+			else if (cmd == "NICK"){nick_cmd(client, clientFd, params);return;}
+			else if (cmd == "USER"){user_cmd(client, clientFd, params);return;}
 		}
 		if(_authenticatedClients[clientFd])
 		{
@@ -270,6 +282,8 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				nick_cmd(client, clientFd, params);
 			else if (cmd == "USER" && client.getUserName().empty())
 				user_cmd(client, clientFd, params);
+			else if (cmd == "WHOIS")
+				whois_cmd(client, params);
 			else if (cmd == "PRIVMSG")
 				privmsg_cmd(client,clientFd, params);
 			else if (cmd == "INVITE")
@@ -284,7 +298,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 				part_cmd(client, clientFd, params);
 			else if (cmd == "KICK")
 				kick_cmd(client, clientFd, params);
-			else if (cmd == "MODE")
+			else if (cmd == "MODE" && params.size() >= 2)
 				mode_cmd(client, clientFd, params);
 			else if (cmd == "LIST")
 				listChannels(client);
@@ -311,7 +325,6 @@ void Server::cleanupClient(int clientFd) {
 	std::cout << "Cleaning up client " << clientFd << std::endl;
 	close(clientFd);
 	_authenticatedClients.erase(clientFd);
-	_clientBuffers[clientFd].clear();
 	_mapClients.erase(clientFd);
 
 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
@@ -356,12 +369,12 @@ void Server::createChannel(std::string &channelName, Client &client)
 
 bool Server::isChannelExist(const std::string &channelName) const
 {
-	std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
-	if (it == _channels.end())
-	{
-		return false;
-	}
-	return true;
+    std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
+    if (it == _channels.end())
+    {
+        return false;
+    }
+    return true;
 }
 
 bool	Server::isClientInChannel(std::string &channelName, Client &client)

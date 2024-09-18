@@ -5,6 +5,9 @@
 Client::Client() :
 	_clientFd(-1),
 	_nickName(""),
+	_userName(""),
+	_clientAddress(""),
+	_realName(""),
 	_authenticated(false),
 	_modeInvisible(false)
 	{
@@ -32,6 +35,11 @@ std::string Client::getNickName() const
 std::string Client::getUserName() const
 {
 	return _userName;
+}
+
+std::string Client::getClientAddress() const
+{
+	return _clientAddress;
 }
 
 std::string Client::getRealName() const
@@ -64,6 +72,11 @@ void Client::setAuthenticated(bool authenticated)
 void Client::setUserName(const std::string &userName)
 {
 	_userName = userName;
+}
+
+void Client::setClientAddress(const std::string &clientAddress)
+{
+	_clientAddress = clientAddress;
 }
 
 void Client::setRealName(const std::string &realName)

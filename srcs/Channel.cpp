@@ -12,7 +12,7 @@ Channel::Channel(std::string &channelName, Client &client)
 	setChannelName(channelName);
 	setInvitedMode(false);
 	setLimitMode(false, "");
-	setOperatorMode(true);
+	setOperatorMode(false);
 	setPasswordMode(false, "");
 	setTopicMode(false);
 	insertMember(client);
@@ -113,32 +113,6 @@ void	Channel::setInvited(Client &client)
 			std::cout << "setInvited 1: " << client.getNickName() << std::endl;
 			_invited.insert(client.getClientFd());
 		}
-}
-
-void	Channel::setCreator(std::string nickname)
-{
-	std::cout << "[setCreator] nickname: " << nickname << std::endl;
-	if (isMember(nickname) && !isBanned(nickname))
-	{
-		std::map<int, Client*>::const_iterator it = _members.begin();
-		while (it != _members.end())
-		{
-			if (it->second->getNickName() == nickname && _creator.find(it->second->getClientFd()) == _creator.end())
-			{
-				int clientFd = it->first;
-				_creator.insert(std::make_pair(clientFd, it->second));
-
-				for (it = _members.begin(); it != _members.end(); it++)
-				{
-					std::string message = nickname + " is now an operator of " + getChannelName() + ".\n";
-					send(it->second->getClientFd(), message.c_str(), message.size(), 0);
-				}
-				return ;
-			}
-			it++;
-		}
-	}
-	std::cout << "[getNewCreator] nickname: " << getCreator().begin()->second->getNickName() << std::endl;
 }
 
 void	Channel::setInvitedMode(bool status)
@@ -398,10 +372,6 @@ void	Channel::removeMember(Client &client)
 	if (_members.find(client.getClientFd()) != _members.end())
 	{
 		_members.erase(client.getClientFd());
-		if (getMembers().size() == 0)
-		{
-			return;
-		}
 		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); it++)
 		{
 			std::string message = client.getNickName() + " has been removed from channel " + getChannelName() + ".\n";
@@ -418,10 +388,6 @@ void	Channel::removeMember(std::string nickname)
 		if (it->second->getNickName() == nickname)
 		{
 			_members.erase(it);
-			if (getMembers().size() == 0)
-			{
-				return;
-			}
 			for (it = _members.begin(); it != _members.end(); it++)
 			{
 				std::string message = nickname + " has been removed from channel " + getChannelName() + ".\n";
@@ -459,6 +425,14 @@ void Channel::removeOperator(std::string nickname)
 				std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
 				send(it->first, message.c_str(), message.size(), 0);
 			}
+			// for (std::map<int, Client*>::iterator membersIt = _members.begin(); membersIt != _members.end(); ++membersIt)
+			// {
+			// 	if (membersIt->second->getNickName() != nickname)
+			// 	{
+			// 		std::string message = nickname + " is no longer an operator of " + getChannelName() + ".\n";
+			// 		send(membersIt->second->getClientFd(), message.c_str(), message.size(), 0);
+			// 	}
+			// }
 			return;
 		}
 		++it;
@@ -505,22 +479,13 @@ void	Channel::removeInvited(Client &client)
 
 bool Channel::isPasswordProtected() const
 {
-	return !_password.empty();
+    return !_password.empty();
 }
 
 
 bool	Channel::isOperator(const Client& client) const
 {
-	std::map<int, Client*>::const_iterator it = _operators.begin();
-	while (it != _operators.end())
-	{
-		if (it->second->getNickName() == client.getNickName())
-		{
-			return true;
-		}
-		it++;
-	}
-	return false;
+	return _operators.find(client.getClientFd()) != _operators.end();
 }
 
 bool	Channel::isMember(const Client& client) const
@@ -658,6 +623,48 @@ std::string Channel::memberList() const
 
 	return nicknames;
 }
+
+
+// void Channel::memberList(int clientFd) const
+// {
+//     // Enviar operadores
+//     std::map<int, Client*>::const_iterator itOps = _operators.begin();
+//     while (itOps != _operators.end())
+//     {
+//         if (itOps->second->getModeInvisible() == false)
+//         {
+//             std::string operatorNick = "@" + itOps->second->getNickName();
+//             operatorNick += "\r\n"; // IRC usa \r\n para terminadores de linha
+
+//             if (send(clientFd, operatorNick.c_str(), operatorNick.size(), 0) == -1)
+//             {
+// 				std::cerr << "Error sending operator list" << std::endl;
+//                 return; // Sai da função em caso de erro
+//             }
+//         }
+//         ++itOps;
+//     }
+
+//     // Enviar membros não operadores
+//     std::map<int, Client*>::const_iterator it = _members.begin();
+//     while (it != _members.end())
+//     {
+//         if (_operators.find(it->first) == _operators.end() && it->second->getModeInvisible() == false)
+//         {
+//             std::string memberNick = it->second->getNickName();
+//             memberNick += "\r\n"; // IRC usa \r\n para terminadores de linha
+
+//             if (send(clientFd, memberNick.c_str(), memberNick.size(), 0) == -1)
+//             {
+
+
+// 				std::cerr << "Error sending member list" << std::endl;
+//                 return; // Sai da função em caso de erro
+//             }
+//         }
+//         ++it;
+//     }
+// }
 
 
 void	Channel::invitedList() const

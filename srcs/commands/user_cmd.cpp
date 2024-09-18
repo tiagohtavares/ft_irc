@@ -17,10 +17,30 @@ void	Server::user_cmd(Client &client, int clientFd, std::vector<std::string> par
 			// sendMessage a welcome message after USER is set
 			const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
 			sendMessage(clientFd,welcomeUser);
+			_authenticatedClients[clientFd] = true;
+			sendWelcomeMessageServe(clientFd);
+			std::cout << "Client authenticated." << std::endl;
+			return;
 
 		}
 		else
 			sendMessage(clientFd, "Username already set.\n");
+	}
+	else if (params.size() == 1) // USER command with only 1 parameter
+	{
+		if (isNicknameInUse(params[0]))
+		{
+			sendMessage(clientFd, "Username already in use.\n");
+			// cleanupClient(clientFd);
+			return;
+		}
+		client.setUserName(params[0]);
+		for (size_t i = 0; i < params.size(); i++)
+			params.pop_back();
+		_authenticatedClients[clientFd] = true;
+		sendWelcomeMessageServe(clientFd);
+		std::cout << "Client authenticated." << std::endl;
+		return;
 	}
 	else
 	{

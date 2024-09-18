@@ -23,18 +23,13 @@ class Channel
 		void			setOperator(Client &client);
 		void			setOperator(std::string client);
 		void			setCreator(Client &client);
-		void			setCreator(std::string nickname);
 		void			setInvitedMode(bool status);
 		void			setLimitMode(bool status, std::string limit);
 		void			setOperatorMode(bool status);
 		void			setPasswordMode(bool status, std::string password);
 		void			setTopicMode(bool status);
-
-		// void			setBanned(Client &client);
 		void			setInvited(Client &client);
-
 		int 			getUsersCount() const;
-
 		std::string		getChannelName() const;
 		std::string		getTopic() const;
 		std::string		getPassword() const;
@@ -43,7 +38,6 @@ class Channel
 		std::map<int, Client*>	getMembers() const;
 		std::map<int, Client*>	getOperators() const;
 		std::map<int, Client*>	getCreator() const;
-		// std::set<int>	getBanned() const;
 		std::set<int>	getInvited() const;
 		bool			getInviteMode() const;
 		bool			getTopicMode() const;
@@ -54,7 +48,6 @@ class Channel
 		void			insertOperator(Client &client);
 		void			insertCreator(Client &client);
 		void			insertMember(Client &client);
-		// void			insertBanned(Client &client);
 		void			insertInvited(Client &client);
 
 		void			removeOperator(Client &client);
@@ -74,13 +67,10 @@ class Channel
 		bool			isBanned(const Client& client) const;
 		bool			isBanned(std::string nickname) const;
 		bool			isInvited(const Client& client) const;
-
-		std::string		memberList() const;
+		std::string			memberList() const;
 		void			bannedList() const;
 		void			invitedList() const;
-
 		bool			isPasswordProtected() const;
-
 		void			sendMessageToMembers(const std::string &message) const;
 
 	private:

@@ -12,13 +12,19 @@
 #include <queue>
 #include <cerrno>
 # include <sstream>
-
+#include <iostream>
+#include <csignal>  // For signal handling
+#include <cstdlib>  // For exit()
 # include <set>
 
 # include "../includes/Client.hpp"
 # include "../includes/Channel.hpp"
 
+
+
 # define ENDL std::cout << std::endl;
+
+
 
 class Server
 {
@@ -35,7 +41,6 @@ class Server
 		std::vector<struct pollfd>	_pollfds;
 		std::map<int, bool>			_authenticatedClients;
 		std::map<int, std::string> _clientBuffers;
-
 		void	start();
 
 		// Client management
@@ -50,11 +55,6 @@ class Server
 		bool	isChannelExist(const std::string &channelName) const;
 		bool	isClientInChannel(std::string &channelName, Client &client);
 		Channel* getChannelByName(const std::string& name);
-
-		bool	isChannelNameValid(const std::vector<std::string> &params, int clientFd);
-		void	joinChannelWithoutPassword(Client &client, int clientFd, const std::string &channelName);
-		void	joinChannelWithPassword(Client &client, int clientFd, const std::string &channelName, const std::string &password);
-		void	handleChannelJoin(Client &client, int clientFd, Channel &channel);
 
 
 
@@ -75,22 +75,20 @@ class Server
 		void	pass_cmd(int clientFd, std::vector<std::string> params);
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		void	privmsg_cmd(Client &client, int clientFd, std::vector<std::string> params);
-
+		void	privmsg_cmd(Client &client,int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	handleExistingChannelJoin(Client &client, int clientFd, std::vector<std::string> &params);
 		void	createNewChannel(Client &client, int clientFd, std::vector<std::string> &params);
 		void	leaveAllChannels(Client &client);
-
+		void	notifyChannelJoin(const Client &client, int clientFd, Channel &channel);
 		void	topic_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	part_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		// void	quit_cmd(int clientFd);
 		void	quit_cmd(Client &client);
 		void 	kick_cmd(Client &client, int clientFd, std::vector<std::string> params);
-		void 	kick_cmd_server(Client &client, int clientFd, std::vector<std::string> params);
-		void 	kick_cmd_channel(Client &client, int clientFd, std::vector<std::string> params);
+		void	names_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	msg_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	invite_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		void	whois_cmd(Client &client, std::vector<std::string> params);
 
 		Client* findClientByNickname(const std::string &nickname);
 		Client * createChannelPassword(const std::string &channelName, Client &client, const std::string &password);
@@ -105,7 +103,6 @@ class Server
 		//ultis
 		void sendMessage(int fd, const std::string& message);
 		void sendWelcomeMessageServe(int fd);
-		void names_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		std::vector<std::string> split(const std::string& str, const std::string& delimiter);
 		std::string buildWelcomeMessage(Channel &channel);
 		void sendToChannel(const std::string& channelName, const std::string& message);

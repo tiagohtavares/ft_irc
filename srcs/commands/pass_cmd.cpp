@@ -6,11 +6,11 @@ void	Server::pass_cmd(int clientFd, std::vector<std::string> params)
     {
         std::cout << "Received password: " << params.front() << std::endl;
         std::cout << "Params size: " << params.size() << std::endl;
-        
+
         if (params.front() == _password)
         {
-            _authenticatedClients[clientFd] = true;
-            sendMessage(clientFd, "Password accepted. You are now connected.\n");
+            // _authenticatedClients[clientFd] = true;
+            sendMessage(clientFd, "Welcome to the server.\nTo start a session, enter a nickname and username.\n");
             std::cout << "Client authenticated." << std::endl;
         }
         else
