@@ -2,16 +2,12 @@
 
 void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
-	if (params.size() == 0 || params.size() == 1)
+	if (params.size() == 2)
 	{
 		if (isChannelExist(params[0]))
 		{
 			if (isClientInChannel(params[0], client))
 			{
-				std::string errorMessage = ":442 " + client.getNickName() + " " + _channels[params[0]].getChannelName() + " :You're not on that channel\n";
-				// std::string errorMessage = ":442 You have left channel" + _channels[params[0]].getChannelName() + " (Leaving) \n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-
 				if (_channels[params[0]].isCreator(client))
 				{
 					_channels[params[0]].removeCreator(client);
@@ -35,7 +31,12 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 					_channels[params[0]].removeMember(client);
 					_channels[params[0]].removeInvited(client);
 				}
-				return;
+				if (!_channels[params[0]].isMember(client))
+				{
+					std::string errorMessage = ":442 " + client.getNickName() + " " + _channels[params[0]].getChannelName() + " :You're not on that channel\n";
+					send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+					return;
+				}
 			}
 			else
 			{
