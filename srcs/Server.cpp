@@ -324,21 +324,87 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 }
 
 
-void Server::cleanupClient(int clientFd) {
-	std::cout << "Cleaning up client " << clientFd << std::endl;
-	close(clientFd);
-	_authenticatedClients.erase(clientFd);
-	_mapClients.erase(clientFd);
+// void Server::cleanupClient(int clientFd) {
+// 	std::cout << "Cleaning up client " << clientFd << std::endl;
+// 	close(clientFd);
+// 	_authenticatedClients.erase(clientFd);
+// 	_mapClients.erase(clientFd);
 
-	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
-	{
-		if (it->fd == clientFd)
-		{
-			_pollfds.erase(it);
-			break;
-		}
-	}
+// 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
+// 	{
+// 		if (it->fd == clientFd)
+// 		{
+// 			_pollfds.erase(it);
+// 			break;
+// 		}
+// 	}
+// }
+
+
+void Server::cleanupClient(int clientFd) {
+    std::cout << "Cleaning up client " << clientFd << std::endl;
+
+    // Primeiro, remova o cliente de todos os canais
+    for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        Channel &channel = it->second;
+
+        if (channel.isCreator(_mapClients[clientFd]))
+        {
+            channel.removeMember(_mapClients[clientFd]);
+            channel.removeCreator(_mapClients[clientFd]);
+            channel.removeOperator(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
+        }
+        else if (channel.isOperator(_mapClients[clientFd]))
+        {
+            channel.removeOperator(_mapClients[clientFd]);
+            channel.removeMember(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
+        }
+        else
+        {
+            channel.removeMember(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
+        }
+    }
+
+    // Feche a conexão do cliente
+    close(clientFd);
+
+    // Remova o cliente das listas internas
+    _authenticatedClients.erase(clientFd);
+    _mapClients.erase(clientFd);
+
+    // Remova o fd do cliente da lista de pollfds
+    for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+        if (it->fd == clientFd) {
+            _pollfds.erase(it);
+            break;
+        }
+    }
 }
+
+
+// void Server::cleanupClient(int clientFd) {
+//     std::cout << "Cleaning up client " << clientFd << std::endl;
+
+//     leaveAllChannels(_mapClients[clientFd]);
+
+//     // Feche a conexão do cliente
+//     close(clientFd);
+
+//     // Remova o cliente das listas internas
+//     _authenticatedClients.erase(clientFd);
+//     _mapClients.erase(clientFd);
+
+//     // Remova o fd do cliente da lista de pollfds
+//     for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+//         if (it->fd == clientFd) {
+//             _pollfds.erase(it);
+//             break;
+//         }
+//     }
+// }
 
 void Server::cleanup()
 {
@@ -440,13 +506,6 @@ void	Server::leaveAllChannels(Client &client)
 				itChannel->second.removeMember(client);
 				itChannel->second.removeInvited(client);
 			}
-			if (isChannelExist(channelName) && !_channels[channelName].isMember(client))
-			{
-				std::string errorMessage = ":442 " + nickname + " " + channelName + " :You're not on that channel\n";
-				send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
-				++itChannel;
-				continue;
-			}
 			if (_channels[channelName].getMembers().size() == 0)
 			{
 				++itChannel;
@@ -457,6 +516,14 @@ void	Server::leaveAllChannels(Client &client)
 			{
 				sendToChannel(itChannel->second.getChannelName(), leaveMessage);
 			}
+			if (isChannelExist(channelName) && !_channels[channelName].isMember(client))
+			{
+				std::string errorMessage = ":442 " + nickname + " " + channelName + " :You're not on that channel\n";
+				send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+				++itChannel;
+				continue;
+			}
+			
 		}
 		if (_channels.empty())
 		{
