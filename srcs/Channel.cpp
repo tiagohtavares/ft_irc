@@ -9,7 +9,7 @@ Channel::Channel() : _channelName("default")
 
 Channel::Channel(std::string &channelName, Client &client)
 {
-	setOperatorMode(true);
+	setOperatorMode(false);
 	setInvitedMode(true);
 	setTopicMode(true);
 	setPasswordMode(false, "");
@@ -448,6 +448,11 @@ void	Channel::removeCreator(Client &client)
 	if (_creator.find(client.getClientFd()) != _creator.end())
 	{
 		_creator.erase(client.getClientFd());
+		setOperatorMode(false);
+		setInvitedMode(false);
+		setTopicMode(false);
+		setPasswordMode(false, "");
+		setLimitMode(false, "");
 		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
 		{
 			std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n";
