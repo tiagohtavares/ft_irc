@@ -83,11 +83,11 @@ class Channel
 		std::map<int, Client*>		_operators;
 		std::map<int, Client*>		_banned;
 		std::set<int>				_invited;
-		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
-		bool						_limitMode;// MODE +l (true) or -l (false)
 		bool						_operatorMode;// MODE +o (true) or -o (false)
-		bool						_passwordMode;// MODE +k (true) or -k (false)
+		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
 		bool						_topicMode;// MODE +t (true) or -t (false)
+		bool						_passwordMode;// MODE +k (true) or -k (false)
+		bool						_limitMode;// MODE +l (true) or -l (false)
 };
 
 #endif

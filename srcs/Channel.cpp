@@ -9,12 +9,13 @@ Channel::Channel() : _channelName("default")
 
 Channel::Channel(std::string &channelName, Client &client)
 {
-	setChannelName(channelName);
-	setInvitedMode(false);
-	setLimitMode(false, "");
-	setOperatorMode(false);
+	setOperatorMode(true);
+	setInvitedMode(true);
+	setTopicMode(true);
 	setPasswordMode(false, "");
-	setTopicMode(false);
+	setLimitMode(false, "");
+	setChannelName(channelName);
+	setInvited(client);
 	insertMember(client);
 	setOperator(client);
 	setCreator(client);
@@ -372,6 +373,10 @@ void	Channel::removeMember(Client &client)
 	if (_members.find(client.getClientFd()) != _members.end())
 	{
 		_members.erase(client.getClientFd());
+		if (getMembers().size() == 0)
+		{
+			return;
+		}
 		for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); it++)
 		{
 			std::string message = client.getNickName() + " has been removed from channel " + getChannelName() + ".\n";
@@ -379,7 +384,6 @@ void	Channel::removeMember(Client &client)
 		}
 	}
 }
-
 void	Channel::removeMember(std::string nickname)
 {
 	std::map<int, Client*>::iterator it = _members.begin();
@@ -485,7 +489,16 @@ bool Channel::isPasswordProtected() const
 
 bool	Channel::isOperator(const Client& client) const
 {
-	return _operators.find(client.getClientFd()) != _operators.end();
+	std::map<int, Client*>::const_iterator it = _operators.begin();
+	while (it != _operators.end())
+	{
+		if (it->second->getNickName() == client.getNickName())
+		{
+			return true;
+		}
+		it++;
+	}
+	return false;
 }
 
 bool	Channel::isMember(const Client& client) const

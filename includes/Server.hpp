@@ -77,6 +77,13 @@ class Server
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	privmsg_cmd(Client &client,int clientFd, std::vector<std::string> params);
 		void	join_cmd(Client &client, int clientFd, std::vector<std::string> params);
+		bool	isChannelNameValid(const std::vector<std::string> &params, int clientFd);
+		void	joinChannelWithoutPassword(Client &client, int clientFd, const std::string &channelName);
+		void	joinChannelWithPassword(Client &client, int clientFd, const std::string &channelName, const std::string &password);
+		void	handleChannelJoin(Client &client, int clientFd, Channel &channel);
+		void	putMemberList(Client &client, Channel &channel);
+
+
 		void	handleExistingChannelJoin(Client &client, int clientFd, std::vector<std::string> &params);
 		void	createNewChannel(Client &client, int clientFd, std::vector<std::string> &params);
 		void	leaveAllChannels(Client &client);

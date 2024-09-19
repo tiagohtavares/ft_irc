@@ -369,12 +369,12 @@ void Server::createChannel(std::string &channelName, Client &client)
 
 bool Server::isChannelExist(const std::string &channelName) const
 {
-    std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
-    if (it == _channels.end())
-    {
-        return false;
-    }
-    return true;
+	std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		return false;
+	}
+	return true;
 }
 
 bool	Server::isClientInChannel(std::string &channelName, Client &client)
@@ -415,6 +415,8 @@ void	Server::leaveAllChannels(Client &client)
 	{
 		if (!itChannel->second.getMembers().empty() && itChannel->second.isMember(client))
 		{
+			std::string channelName = itChannel->second.getChannelName();
+			std::string nickname = client.getNickName();
 			std::string leaveMessage = ":" + client.getNickName() + " PART " + itChannel->second.getChannelName() + "\r\n";
 
 			if (itChannel->second.isCreator(client))
@@ -422,38 +424,30 @@ void	Server::leaveAllChannels(Client &client)
 				itChannel->second.removeCreator(client);
 				itChannel->second.removeOperator(client);
 				itChannel->second.removeMember(client);
-
-				// if (!itChannel->second.getMembers().empty())
-				// {
-				// 	std::map<int, Client*>::iterator it = itChannel->second.getMembers().begin();
-				// 	std::cout << "New creator: " << it->second->getNickName() << std::endl;
-
-				// 	if (!itChannel->second.getOperators().empty())
-				// 	{
-				// 		it = itChannel->second.getOperators().begin();
-				// 		itChannel->second.setCreator(it->second->getNickName());
-				// 	}
-				// 	else
-				// 	{
-				// 		itChannel->second.setCreator(it->second->getNickName());
-				// 		itChannel->second.setOperator(it->second->getNickName());
-				// 	}
-				// }
+				itChannel->second.removeInvited(client);
 			}
 			else if (itChannel->second.isOperator(client))
 			{
 				itChannel->second.removeOperator(client);
 				itChannel->second.removeMember(client);
+				itChannel->second.removeInvited(client);
 			}
 			else
 			{
 				itChannel->second.removeMember(client);
+				itChannel->second.removeInvited(client);
 			}
-			if (itChannel->second.getMembers().empty())
+			if (isChannelExist(channelName) && !_channels[channelName].isMember(client))
 			{
-				std::map<std::string, Channel>::iterator itToErase = itChannel;
+				std::string errorMessage = ":442 " + nickname + " " + channelName + " :You're not on that channel\n";
+				send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
 				++itChannel;
-				_channels.erase(itToErase);
+				continue;
+			}
+			if (_channels[channelName].getMembers().size() == 0)
+			{
+				++itChannel;
+				deleteChannel(channelName);
 				continue;
 			}
 			else
