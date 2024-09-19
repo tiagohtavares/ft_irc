@@ -28,6 +28,7 @@ class Client
 		std::string	getUserName() const;
 		std::string	getClientAddress() const;
 		std::string	getRealName() const;
+		bool		getRegistratedWithPass() const;
 		bool		getAuthenticated() const;
 		bool 		getModeInvisible() const;
 
@@ -38,6 +39,7 @@ class Client
 		void		setUserName(const std::string &userName);
 		void		setClientAddress(const std::string &clientAddress);
 		void		setRealName(const std::string &realName);
+		void		setRegisteredWithPass(bool registeredWithPass);
 		void 		setModeInvisible(bool modeInvisible);
 
 	private:
@@ -46,6 +48,7 @@ class Client
 		std::string _userName;
 		std::string _clientAddress;
 		std::string	_realName;
+		bool		_registeredWithPass;
 		bool		_authenticated;
 		bool		_modeInvisible;
 };

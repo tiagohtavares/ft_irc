@@ -72,7 +72,7 @@ class Server
 
 
 		// --- Commands
-		void	pass_cmd(int clientFd, std::vector<std::string> params);
+		void	pass_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	nick_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	user_cmd(Client &client, int clientFd, std::vector<std::string> params);
 		void	privmsg_cmd(Client &client,int clientFd, std::vector<std::string> params);

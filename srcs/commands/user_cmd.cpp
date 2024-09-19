@@ -15,11 +15,17 @@ void	Server::user_cmd(Client &client, int clientFd, std::vector<std::string> par
 			client.setRealName(realName);
 
 			// sendMessage a welcome message after USER is set
-			const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
-			sendMessage(clientFd,welcomeUser);
-			_authenticatedClients[clientFd] = true;
-			sendWelcomeMessageServe(clientFd);
-			std::cout << "Client authenticated." << std::endl;
+			if (client.getNickName().empty())
+				sendMessage(clientFd, "Please set a nickname.\n");
+			else if (client.getRegistratedWithPass() == false)
+				sendMessage(clientFd, "Please set a password.\n");
+			else
+			{
+				_authenticatedClients[clientFd] = true;
+				const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
+				sendMessage(clientFd, welcomeUser);
+				sendWelcomeMessageServe(clientFd);
+			}
 			return;
 
 		}
@@ -35,11 +41,21 @@ void	Server::user_cmd(Client &client, int clientFd, std::vector<std::string> par
 			return;
 		}
 		client.setUserName(params[0]);
+
+		if (client.getNickName().empty())
+			sendMessage(clientFd, "Please set a nickname.\n");
+		else if (client.getRegistratedWithPass() == false)
+			sendMessage(clientFd, "Please set a password.\n");
+		else
+		{
+			_authenticatedClients[clientFd] = true;
+			const std::string welcomeUser = "Welcome, " + client.getNickName() + " (" + client.getUserName() + ")!\n";
+			sendMessage(clientFd, welcomeUser);
+			sendWelcomeMessageServe(clientFd);
+		}
+
 		for (size_t i = 0; i < params.size(); i++)
 			params.pop_back();
-		_authenticatedClients[clientFd] = true;
-		sendWelcomeMessageServe(clientFd);
-		std::cout << "Client authenticated." << std::endl;
 		return;
 	}
 	else

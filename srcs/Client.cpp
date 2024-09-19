@@ -8,6 +8,7 @@ Client::Client() :
 	_userName(""),
 	_clientAddress(""),
 	_realName(""),
+	_registeredWithPass(false),
 	_authenticated(false),
 	_modeInvisible(false)
 	{
@@ -47,6 +48,11 @@ std::string Client::getRealName() const
 	return _realName;
 }
 
+bool	Client::getRegistratedWithPass() const
+{
+	return _registeredWithPass;
+}
+
 bool Client::getAuthenticated() const
 {
 	return _authenticated;
@@ -82,6 +88,11 @@ void Client::setClientAddress(const std::string &clientAddress)
 void Client::setRealName(const std::string &realName)
 {
 	_realName = realName;
+}
+
+void Client::setRegisteredWithPass(bool registeredWithPass)
+{
+	_registeredWithPass = registeredWithPass;
 }
 
 void Client::setClientFd(int clientFd)

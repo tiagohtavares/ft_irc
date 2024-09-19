@@ -200,7 +200,7 @@ void Server::splitCmdLine(std::string input)
 {
 	while (!_params.empty())
 		_params.pop_back();
-	
+
 	if (input.empty())
 		return;
 
@@ -274,13 +274,13 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 		if(!_authenticatedClients[clientFd])
 		{
 			if (cmd == "CAP"){return;}
-			else if (cmd == "PASS"){pass_cmd(clientFd, params);return;}
+			else if (cmd == "PASS"){pass_cmd(client, clientFd, params);return;}
 			else if (cmd == "NICK"){nick_cmd(client, clientFd, params);return;}
 			else if (cmd == "USER"){user_cmd(client, clientFd, params);return;}
 		}
 		if(_authenticatedClients[clientFd])
 		{
-			
+
 			if (cmd == "NICK")
 				nick_cmd(client, clientFd, params);
 			else if (cmd == "USER" && client.getUserName().empty())
