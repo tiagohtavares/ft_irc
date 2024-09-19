@@ -199,7 +199,7 @@ void Server::splitCmdLine(std::string input)
 {
 	while (!_params.empty())
 		_params.pop_back();
-	
+
 	if (input.empty())
 		return;
 
@@ -322,19 +322,40 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 
 
 void Server::cleanupClient(int clientFd) {
-	std::cout << "Cleaning up client " << clientFd << std::endl;
-	close(clientFd);
-	_authenticatedClients.erase(clientFd);
-	_mapClients.erase(clientFd);
+    std::cout << "Cleaning up client " << clientFd << std::endl;
 
-	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
-	{
-		if (it->fd == clientFd)
-		{
-			_pollfds.erase(it);
-			break;
-		}
-	}
+    // Primeiro, remova o cliente de todos os canais
+    for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        Channel &channel = it->second;
+        if (channel.isMember(_mapClients[clientFd]))
+        {
+            channel.removeMember(_mapClients[clientFd]);
+        }
+        else if (channel.isOperator(_mapClients[clientFd]))
+        {
+            channel.removeOperator(_mapClients[clientFd]);
+
+        }
+        else if (channel.isCreator(_mapClients[clientFd]))
+        {
+            channel.removeCreator(_mapClients[clientFd]);
+        }
+    }
+
+    // Feche a conexão do cliente
+    close(clientFd);
+
+    // Remova o cliente das listas internas
+    _authenticatedClients.erase(clientFd);
+    _mapClients.erase(clientFd);
+
+    // Remova o fd do cliente da lista de pollfds
+    for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+        if (it->fd == clientFd) {
+            _pollfds.erase(it);
+            break;
+        }
+    }
 }
 
 void Server::cleanup()
