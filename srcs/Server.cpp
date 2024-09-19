@@ -199,19 +199,18 @@ void Server::splitCmdLine(std::string input)
 {
 	while (!_params.empty())
 		_params.pop_back();
+	
+	if (input.empty())
+		return;
 
 	input = input.substr(input.find_first_not_of(" "));
 	size_t space_pos = input.find_first_of(" ");
 	_cmd = input.substr(0, space_pos);
 
-	size_t i;
-	i = 0;
-
-	while (i < _cmd.size())
+	for (size_t i = 0; i < _cmd.size(); i++)
 	{
-		if (std::islower (_cmd[i]))
-			_cmd[i] = std::toupper (_cmd[i]);
-		i++;
+		if (std::islower(_cmd[i]))
+			_cmd[i] = std::toupper(_cmd[i]);
 	}
 
 	if (space_pos != std::string::npos)
@@ -220,7 +219,12 @@ void Server::splitCmdLine(std::string input)
 
 	while (!input.empty())
 	{
-		input = input.substr(input.find_first_not_of(" "));
+		// Remove espaços em branco no início da string
+		size_t first_not_space = input.find_first_not_of(" ");
+		if (first_not_space == std::string::npos)
+			break; // Não há mais parâmetros
+
+		input = input.substr(first_not_space);
 		if (input[0] == ':')
 		{
 			input.erase(input.begin());
