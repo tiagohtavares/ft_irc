@@ -1,13 +1,13 @@
-1. KICK (Ejetar um cliente do canal)	
+1. KICK (Ejetar um cliente do canal)
 
     Teste 1: Um operador de canal expulsa um cliente e verifica se ele é removido do canal.
     	SERVER:		[DONE] /kick nickname
     	CHANNEL:	[DONE] /kick #channel nickname
-    
+
     Teste 2: Um cliente sem privilégios de operador tenta usar o comando KICK e recebe uma mensagem de erro.
         SERVER:		[DONE]
     	CHANNEL:	[DONE]
-    	
+
     Teste 3: Um operador tenta expulsar um cliente que não está no canal, e o sistema responde com um erro.
     	SERVER: 	[DONE] 441 EEE #casa :They aren't on that channel
     	CHANNEL: 	[Print no SERVER] 441 EEE #casa :They aren't on that channel
@@ -21,7 +21,7 @@
     Teste 1: Um operador convida um cliente que não está no canal, e o cliente é capaz de entrar no canal.
     	SERVER: 	[DONE] /invite nickname #channel
     	CHANNEL: 	[DONE] /invite nickname
-    	
+
     	[DONE] O convidado recebe a mensagem de convite no server;
     	[DONE] Quem convida recebe a confirmacao do convite no server;
 
@@ -40,20 +40,20 @@
 3. TOPIC (Alterar ou visualizar o tópico do canal)
 
     Teste 1: Um operador altera o tópico do canal, e todos os membros do canal conseguem visualizar o novo tópico.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 2: Um cliente comum tenta alterar o tópico com MODE +t ativo, e o sistema bloqueia a ação.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 3: Um operador altera o tópico com MODE +t ativo, e a alteração é bem-sucedida.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 4: Verificar se o sistema lida corretamente com um tópico vazio ou com comprimento máximo.
-    	SERVER: 	
-    	CHANNEL: 	
+    	SERVER:
+    	CHANNEL:
 
 4. MODE (Alterar o modo do canal)
 
@@ -64,54 +64,53 @@
     Teste 2 (MODE +i): Um cliente convidado tenta entrar após o MODE +i, e o sistema aceita sua entrada.
     	SERVER: 	[DONE]	Now talking on #channel
     	CHANNEL:	[DONE]	Now talking on #channel
-    
+
     Teste 3 (MODE +i): Um cliente convidado tenta entrar após o MODE +i, e o sistema aceita sua entrada. O cliente faz PART, e o sistema NAO aceita sua entrada.
     	SERVER: 	[DONE]	You need to be invited to join this channel.
     	CHANNEL:	[DONE]	You need to be invited to join this channel.
-    
+
     Teste 4 (MODE +i): Um cliente tenta entrar sem ser convidado após o MODE +i, e o sistema bloqueia sua entrada.
     	SERVER: 	[DONE]	You need to be invited to join this channel.
     	CHANNEL:	[DONE]	You need to be invited to join this channel.
 
     Teste 3 (MODE +t): O operador ativa o modo de restrição de tópicos (+t), e apenas operadores podem alterar o tópico.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 4 (MODE +k): Um operador define uma senha para o canal, e os clientes que tentam entrar sem a senha correta são bloqueados.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 5 (MODE -k): O operador remove a senha (MODE -k), e os clientes podem entrar sem fornecer uma senha.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 6 (MODE +o): Um operador concede privilégios de operador a outro cliente, e o cliente recebe permissões adicionais.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 7 (MODE +l): O operador define um limite de usuários, e o canal bloqueia a entrada de novos usuários após atingir o limite.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 8 (MODE -l): O operador remove o limite de usuários (MODE -l), e novos clientes podem entrar normalmente.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
 5. Testes de Segurança
 
     Teste 1: Um cliente envia um comando KICK com um nome de canal inválido ou com caracteres especiais, e o sistema responde corretamente sem falhas.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 2: Um operador tenta alterar o modo do canal com parâmetros inválidos (como limite de usuários negativo), e o sistema rejeita a entrada.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 3: Simular múltiplos operadores tentando modificar o canal simultaneamente para garantir que não haja problemas de concorrência.
-    	SERVER: 
-    	CHANNEL: 
+    	SERVER:
+    	CHANNEL:
 
     Teste 4: Conectar muitos clientes simultaneamente ao canal e executar comandos para verificar se o servidor consegue lidar com a carga sem falhas.
-    	SERVER: 
+    	SERVER:
     	CHANNEL: 
-
