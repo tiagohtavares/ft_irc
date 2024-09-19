@@ -4,6 +4,11 @@ void	Server::part_cmd(Client &client, int clientFd, std::vector<std::string> par
 {
 	if (params.size() <= 2)
 	{
+		if (params.size() == 0)
+		{
+			sendMessage(clientFd, "Invalid PART command.\n");
+			return;
+		}
 		if (isChannelExist(params[0]))
 		{
 			std::string channelName = params[0];
