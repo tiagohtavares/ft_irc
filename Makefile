@@ -17,7 +17,7 @@
 
 NAME		:=	ircserv
 CXX			:=	c++
-CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g -lreadline
+CXXFLAGS	:=	-Wall -Werror -Wextra -std=c++98 -g
 HEADERS		:=	./includes/main.hpp ./includes/Client.hpp ./includes/Channel.hpp ./includes/Server.hpp
 SRCS		:=	./srcs/main.cpp \
 				./srcs/Client.cpp \

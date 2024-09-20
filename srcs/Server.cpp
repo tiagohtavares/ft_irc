@@ -372,8 +372,18 @@ void Server::cleanupClient(int clientFd) {
     close(clientFd);
 
     // Remova o cliente das listas internas
-    _authenticatedClients.erase(clientFd);
-    _mapClients.erase(clientFd);
+	if (_authenticatedClients.find(clientFd) != _authenticatedClients.end())
+	{
+		_authenticatedClients.erase(clientFd);
+	}
+	_authenticatedClients.erase(clientFd);
+    // Remova o cliente das listas internas
+	if (_mapClients.find(clientFd) != _mapClients.end())
+	{
+    	_mapClients.erase(clientFd);
+	}
+    // _authenticatedClients.erase(clientFd);
+    // _mapClients.erase(clientFd);
 
     // Remova o fd do cliente da lista de pollfds
     for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
@@ -523,7 +533,7 @@ void	Server::leaveAllChannels(Client &client)
 				++itChannel;
 				continue;
 			}
-			
+
 		}
 		if (_channels.empty())
 		{

@@ -441,13 +441,13 @@ void	Channel::removeCreator(Client &client)
 	if (_creator.find(client.getClientFd()) != _creator.end())
 	{
 		_creator.erase(client.getClientFd());
-		removeOperatorOldSort(client);
-		if (_operatorOldSort.size() > 0)
+		// removeOperatorOldSort(client);
+		if (_operatorOldSort.size() > 1)
 		{
-			setCreator(*_operatorOldSort[0]);
-			setOperator(*_operatorOldSort[0]);
-			std::string messageInherited = "The " + _operatorOldSort[0]->getNickName() + " has inherited channel creator status.\n";
-			send(_operatorOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+			setCreator(*_operatorOldSort[1]);
+			setOperator(*_operatorOldSort[1]);
+			std::string messageInherited = "The " + _operatorOldSort[1]->getNickName() + " has inherited channel creator status.\n";
+			send(_operatorOldSort[1]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
 			for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
 			{
 				std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
@@ -456,19 +456,80 @@ void	Channel::removeCreator(Client &client)
 		}
 		else if (_membersOldSort.size() > 0)
 		{
-			removeMemberOldSort(client);
-			setCreator(*_membersOldSort[0]);
-			setOperator(*_membersOldSort[0]);
-			std::string messageInherited = "The " + _membersOldSort[0]->getNickName() + " has inherited channel creator status.\n";
-			send(_membersOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
-			for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+			// removeMemberOldSort(client);
+			if (_membersOldSort.size() > 1)
 			{
-				std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
-				send(it->first, message.c_str(), message.size(), 0);
+				setCreator(*_membersOldSort[1]);
+				setOperator(*_membersOldSort[1]);
+				std::string messageInherited = "The " + _membersOldSort[1]->getNickName() + " has inherited channel creator status.\n";
+				send(_membersOldSort[1]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+				for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+				{
+					std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
+					send(it->first, message.c_str(), message.size(), 0);
+				}
 			}
+			// setCreator(*_membersOldSort[0]);
+			// setOperator(*_membersOldSort[0]);
+			// std::string messageInherited = "The " + _membersOldSort[0]->getNickName() + " has inherited channel creator status.\n";
+			// send(_membersOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+			// for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+			// {
+			// 	std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
+			// 	send(it->first, message.c_str(), message.size(), 0);
+			// }
 		}
+		removeOperatorOldSort(client);
+		removeMemberOldSort(client);
 	}
 }
+
+
+// void	Channel::removeCreator(Client &client)
+// {
+// 	if (_creator.find(client.getClientFd()) != _creator.end())
+// 	{
+// 		_creator.erase(client.getClientFd());
+// 		removeOperatorOldSort(client);
+// 		if (_operatorOldSort.size() > 0)
+// 		{
+// 			setCreator(*_operatorOldSort[0]);
+// 			setOperator(*_operatorOldSort[0]);
+// 			std::string messageInherited = "The " + _operatorOldSort[0]->getNickName() + " has inherited channel creator status.\n";
+// 			send(_operatorOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+// 			for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+// 			{
+// 				std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
+// 				send(it->first, message.c_str(), message.size(), 0);
+// 			}
+// 		}
+// 		else if (_membersOldSort.size() > 0)
+// 		{
+// 			removeMemberOldSort(client);
+// 			if (_membersOldSort.size() > 0)
+// 			{
+// 				setCreator(*_membersOldSort[0]);
+// 				setOperator(*_membersOldSort[0]);
+// 				std::string messageInherited = "The " + _membersOldSort[0]->getNickName() + " has inherited channel creator status.\n";
+// 				send(_membersOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+// 				for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+// 				{
+// 					std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
+// 					send(it->first, message.c_str(), message.size(), 0);
+// 				}
+// 			}
+// 			// setCreator(*_membersOldSort[0]);
+// 			// setOperator(*_membersOldSort[0]);
+// 			// std::string messageInherited = "The " + _membersOldSort[0]->getNickName() + " has inherited channel creator status.\n";
+// 			// send(_membersOldSort[0]->getClientFd(), messageInherited.c_str(), messageInherited.size(), 0);
+// 			// for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+// 			// {
+// 			// 	std::string message = client.getNickName() + " is no longer an creator of " + getChannelName() + ".\n" + messageInherited;
+// 			// 	send(it->first, message.c_str(), message.size(), 0);
+// 			// }
+// 		}
+// 	}
+// }
 
 void	Channel::removeMemberOldSort(Client &client)
 {
