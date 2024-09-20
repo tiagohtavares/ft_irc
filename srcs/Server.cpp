@@ -188,11 +188,12 @@ void Server::handleNewConnection()
 
 	// Store the new client
 	client.setClientFd(clientFd);
+	client.setClientAddress(inet_ntoa(clientAddress.sin_addr));
 	_mapClients[clientFd] = client;
 	_authenticatedClients[clientFd] = false;
 
 	std::cout << "Client connected from " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << std::endl;
-	sendWelcomeMessageServe(clientFd);
+	// sendWelcomeMessageServe(clientFd);
 }
 
 void Server::splitCmdLine(std::string input)
@@ -265,25 +266,27 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 {
 	Client &client = _mapClients[clientFd];
 
-	//-----PRINT cmd and params-----//
 	std::cout << "cmd: " << cmd << std::endl;
-
-	for (std::size_t i = 0; i < params.size(); i++){std::cout << "params: " << params[i] << std::endl;}
+	for (std::size_t i = 0; i < params.size(); i++){std::cout << "params: " << params[i] << std::endl;}//-----PRINT cmd and params-----//
 
 	if (!cmd.empty())
 	{
 		if(!_authenticatedClients[clientFd])
 		{
 			if (cmd == "CAP"){return;}
-			else
-				pass_cmd(clientFd, params);
+			else if (cmd == "PASS"){pass_cmd(client, clientFd, params);return;}
+			else if (cmd == "NICK"){nick_cmd(client, clientFd, params);return;}
+			else if (cmd == "USER"){user_cmd(client, clientFd, params);return;}
 		}
 		if(_authenticatedClients[clientFd])
 		{
+
 			if (cmd == "NICK")
 				nick_cmd(client, clientFd, params);
 			else if (cmd == "USER" && client.getUserName().empty())
 				user_cmd(client, clientFd, params);
+			else if (cmd == "WHOIS")
+				whois_cmd(client, params);
 			else if (cmd == "PRIVMSG")
 				privmsg_cmd(client,clientFd, params);
 			else if (cmd == "INVITE")
@@ -305,7 +308,7 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 			else if (cmd == "NAMES")
 				names_cmd(client, clientFd, params);
 			else if(cmd == "QUIT")
-				quit_cmd(clientFd);
+				quit_cmd(client);
 			else if (cmd.empty() && params.empty())
 				return;
 			else
@@ -321,24 +324,47 @@ void Server::processClientMessage(int clientFd, std::string cmd, std::vector<std
 }
 
 
+// void Server::cleanupClient(int clientFd) {
+// 	std::cout << "Cleaning up client " << clientFd << std::endl;
+// 	close(clientFd);
+// 	_authenticatedClients.erase(clientFd);
+// 	_mapClients.erase(clientFd);
+
+// 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
+// 	{
+// 		if (it->fd == clientFd)
+// 		{
+// 			_pollfds.erase(it);
+// 			break;
+// 		}
+// 	}
+// }
+
+
 void Server::cleanupClient(int clientFd) {
     std::cout << "Cleaning up client " << clientFd << std::endl;
 
     // Primeiro, remova o cliente de todos os canais
     for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
         Channel &channel = it->second;
-        if (channel.isMember(_mapClients[clientFd]))
+
+        if (channel.isCreator(_mapClients[clientFd]))
         {
             channel.removeMember(_mapClients[clientFd]);
+            channel.removeCreator(_mapClients[clientFd]);
+            channel.removeOperator(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
         }
         else if (channel.isOperator(_mapClients[clientFd]))
         {
             channel.removeOperator(_mapClients[clientFd]);
-
+            channel.removeMember(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
         }
-        else if (channel.isCreator(_mapClients[clientFd]))
+        else
         {
-            channel.removeCreator(_mapClients[clientFd]);
+            channel.removeMember(_mapClients[clientFd]);
+            channel.removeInvited(_mapClients[clientFd]);
         }
     }
 
@@ -357,6 +383,28 @@ void Server::cleanupClient(int clientFd) {
         }
     }
 }
+
+
+// void Server::cleanupClient(int clientFd) {
+//     std::cout << "Cleaning up client " << clientFd << std::endl;
+
+//     leaveAllChannels(_mapClients[clientFd]);
+
+//     // Feche a conexão do cliente
+//     close(clientFd);
+
+//     // Remova o cliente das listas internas
+//     _authenticatedClients.erase(clientFd);
+//     _mapClients.erase(clientFd);
+
+//     // Remova o fd do cliente da lista de pollfds
+//     for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+//         if (it->fd == clientFd) {
+//             _pollfds.erase(it);
+//             break;
+//         }
+//     }
+// }
 
 void Server::cleanup()
 {
@@ -390,12 +438,12 @@ void Server::createChannel(std::string &channelName, Client &client)
 
 bool Server::isChannelExist(const std::string &channelName) const
 {
-    std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
-    if (it == _channels.end())
-    {
-        return false;
-    }
-    return true;
+	std::map<std::string, Channel>::const_iterator it = _channels.find(channelName);
+	if (it == _channels.end())
+	{
+		return false;
+	}
+	return true;
 }
 
 bool	Server::isClientInChannel(std::string &channelName, Client &client)
@@ -427,4 +475,60 @@ Channel* Server::getChannelByName(const std::string& name)
         return &(it->second);  // Return a pointer to the channel
     }
     return NULL;  // Channel not found
+}
+
+void	Server::leaveAllChannels(Client &client)
+{
+	std::map<std::string, Channel>::iterator itChannel = _channels.begin();
+	while (itChannel != _channels.end())
+	{
+		if (!itChannel->second.getMembers().empty() && itChannel->second.isMember(client))
+		{
+			std::string channelName = itChannel->second.getChannelName();
+			std::string nickname = client.getNickName();
+			std::string leaveMessage = ":" + client.getNickName() + " PART " + itChannel->second.getChannelName() + "\r\n";
+
+			if (itChannel->second.isCreator(client))
+			{
+				itChannel->second.removeCreator(client);
+				itChannel->second.removeOperator(client);
+				itChannel->second.removeMember(client);
+				itChannel->second.removeInvited(client);
+			}
+			else if (itChannel->second.isOperator(client))
+			{
+				itChannel->second.removeOperator(client);
+				itChannel->second.removeMember(client);
+				itChannel->second.removeInvited(client);
+			}
+			else
+			{
+				itChannel->second.removeMember(client);
+				itChannel->second.removeInvited(client);
+			}
+			if (_channels[channelName].getMembers().size() == 0)
+			{
+				++itChannel;
+				deleteChannel(channelName);
+				continue;
+			}
+			else
+			{
+				sendToChannel(itChannel->second.getChannelName(), leaveMessage);
+			}
+			if (isChannelExist(channelName) && !_channels[channelName].isMember(client))
+			{
+				std::string errorMessage = ":442 " + nickname + " " + channelName + " :You're not on that channel\n";
+				send(client.getClientFd(), errorMessage.c_str(), errorMessage.size(), 0);
+				++itChannel;
+				continue;
+			}
+			
+		}
+		if (_channels.empty())
+		{
+			break;
+		}
+		++itChannel;
+	}
 }

@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 
-void Server::sendMessage(int fd, std::string message)
+void Server::sendMessage(int fd, const std::string& message)
 {
     if (send(fd, message.c_str(), message.size(), 0) == -1)
     {

@@ -53,8 +53,11 @@
     "server.hpp": "c",
     "sstream": "cpp",
     "cerrno": "cpp",
-    "ranges": "cpp",
-    "span": "cpp"
+    "chrono": "cpp",
+    "ratio": "cpp",
+    "fstream": "cpp",
+    "iomanip": "cpp",
+    "csignal": "cpp"
   },
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.cCompilerPath": "gcc",

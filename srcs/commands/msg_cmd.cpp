@@ -4,27 +4,26 @@ void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> para
 {
 	if (params.size() < 2)
 	{
-		std::string errorMessage = "Error: Not enough parameters for MSG command. Usage: MSG <channel> <message>\n";
+		std::string errorMessage = "Error: Not enough parameters for MSG command. Usage: MSG <channel> <message>\r\n";
 		send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
 		return;
 	}
 	std::string channelName = params[0];
-	// Verificar se o destino é um canal (começa com '#' ou '&')
-	if (channelName[0] == '#' || channelName[0] == '&')
+
+	std::map<std::string, Channel>::iterator channelIt = _channels.find(channelName);
+	if (channelIt != _channels.end())
 	{
-		// Verificar se o canal existe
-		std::map<std::string, Channel>::iterator channelIt = _channels.find(channelName);
-		if (channelIt != _channels.end())
+		Channel &channel = channelIt->second;
+		if (!channel.isMember(client)) // Verificar se o cliente faz parte do canal
 		{
-			Channel &channel = channelIt->second;
-			if (!channel.isMember(client)) // Verificar se o cliente faz parte do canal
-			{
-				// Se o cliente não é membro (ou foi expulso), enviar mensagem de erro
-				std::string errorMessage = ":442 " + client.getNickName() + " " + channelName + " :You're not on that channel\n";
-				send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
-				return;
-			}
-			// Preparar a mensagem
+			//Se o cliente não é membro (ou foi expulso), enviar mensagem de erro
+			std::string errorMessage = ":442 " + client.getNickName() + " " + channelName + " :You're not on that channel\r\n";
+			send(clientFd, errorMessage.c_str(), errorMessage.size(), 0);
+			return;
+		}
+		else
+		{
+			//Preparar a mensagem
 			std::string message;
 			for (size_t i = 1; i < params.size(); ++i)
 			{
@@ -45,10 +44,9 @@ void Server::msg_cmd(Client &client, int clientFd, std::vector<std::string> para
 				}
 			}
 		}
-		else
-		{
-			// Se o canal não existe, enviar mensagem de erro
-			sendMessage(clientFd, ":403 " + channelName + " :No such channel\n");
-		}
+	}
+	else
+	{
+		sendMessage(clientFd, ":403 " + channelName + " :No such channel\n"); //Se o canal não existe, enviar mensagem de erro
 	}
 }

@@ -39,9 +39,9 @@ void Server::mode_limit(Client &client, int clientFd, std::vector<std::string> p
 	else if (params.size() == 3 && params[1] == "+l" && (!it->second.getOperatorMode() || isOpModeAndOpClient))
 	{
 		unsigned int limit = std::atoi(params[2].c_str());
-		if (limit <= 0)
+		if (limit <= 0 || limit < it->second.getMembers().size())
 		{
-			sendMessage(clientFd, "467 " + client.getNickName() + " " + params[0] + " :Invalid limit. Limit must be greater than 0\n");
+			sendMessage(clientFd, "467 " + client.getNickName() + " " + params[0] + " :Invalid limit.\n");
 			return;
 		}
 		// it->second.setLimit(limit);

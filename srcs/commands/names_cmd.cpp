@@ -1,40 +1,18 @@
 #include "../../includes/Server.hpp"
 
-std::vector<std::string> split(const std::string& str, const std::string& delimiter) 
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    size_t start = 0;
-    size_t end = str.find(delimiter);
-
-    while (end != std::string::npos) 
-	{
-        token = str.substr(start, end - start);
-        tokens.push_back(token);
-        start = end + delimiter.length();
-        end = str.find(delimiter, start);
-    }
-    // Adicionar o último token
-    token = str.substr(start);
-    tokens.push_back(token);
-
-    return tokens;
-}
-
-
-void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> params) 
+void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> params)
 {
 	if (params.size() == 1)
 	{
 		std::string channelName = params[0];
 		std::map<std::string, Channel>::iterator it = _channels.find(channelName);
-		
+
 		if (it != _channels.end())
 		{
 			std::string nicknames = it->second.memberList(); // Criar a lista de nicks dos membros do canal
 			std::vector<std::string> nicknamesSplit = split(nicknames, " ");
 			for(size_t  i = 0; i < nicknamesSplit.size(); ++i)
-			{	
+			{
 				std::string namesResponse = ":server 353 " + client.getNickName() + " = " + channelName + " :" + nicknamesSplit[i] + "\r\n";
 				send(clientFd, namesResponse.c_str(), namesResponse.size(), 0);
 				std::cout << "nick: "<< nicknamesSplit[i] << "\n";
@@ -45,16 +23,17 @@ void Server::names_cmd(Client &client, int clientFd, std::vector<std::string> pa
 		}
 		else
 		{
-			
+
 			sendMessage(clientFd, "403 " + channelName + " :No such channel\n");// Se o canal não existe, enviar mensagem de erro (código 403)
 		}
 	}
 	else
 	{
-		
+
 		sendMessage(clientFd, "461 NAMES :Not enough parameters\n");// Enviar erro 461 se faltar parâmetros
 	}
 }
+
 
 // 3.2.5 Mensagem de nomes
 

@@ -1,10 +1,10 @@
 #include "../../includes/Server.hpp"
 
 // Função para enviar o tópico do canal para o cliente
-void sendChannelTopic(int clientFd, const std::string& channelName, const std::string& topic) 
+void sendChannelTopic(int clientFd, const std::string& channelName, const std::string& topic)
 {
     std::stringstream ss; // Converter clientFd para string usando stringstream
-    ss << clientFd; 
+    ss << clientFd;
     std::string clientFdStr = ss.str();
 
     // Enviar o tópico do canal usando o código 332
@@ -29,15 +29,15 @@ void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> pa
 		{
 			sendMessage(clientFd, _channels[params.front()].getTopic() + "\n");
 			sendChannelTopic(clientFd, channelName, _channels[params.front()].getTopic());
-		} 
+		}
 		else if (it->second.isOperator(client) || it->second.getTopicMode() == false)
 		{
-			if (params.size() == 0) 
+			if (params.size() == 0)
 				sendMessage(clientFd, "Please choose a new topic for the channel");
-			else if (params.size() >= 2) 
+			else if (params.size() >= 2)
 			{
 				std::string newTopic;
-				for (size_t i = 1; i < params.size(); ++i) 
+				for (size_t i = 1; i < params.size(); ++i)
 				{
 					newTopic += params[i] + ' ';
 				}
@@ -51,6 +51,7 @@ void	Server::topic_cmd(Client &client, int clientFd, std::vector<std::string> pa
 	else
 		sendMessage(clientFd, "The channel does not exist.\n");
 }
+
 
 // 3.2.4 Topic message
 

@@ -38,6 +38,7 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/commands/msg_cmd.cpp \
 				./srcs/commands/invite_cmd.cpp \
 				./srcs/commands/mode_cmd.cpp \
+				./srcs/commands/whois_cmd.cpp \
 				./srcs/utils_and_flags/messages.cpp \
 				./srcs/utils_and_flags/messages_hello_serve.cpp \
 				./srcs/utils_and_flags/mode_invite.cpp \
@@ -45,6 +46,7 @@ SRCS		:=	./srcs/main.cpp \
 				./srcs/utils_and_flags/mode_limite.cpp \
 				./srcs/utils_and_flags/mode_operator.cpp \
 				./srcs/utils_and_flags/mode_topic.cpp \
+				./srcs/utils_and_flags/split.cpp
 
 
 OBJS		:=	$(SRCS:.cpp=.o)

@@ -7,6 +7,7 @@
 # include <algorithm>
 # include <set>
 # include <map>
+# include <vector>
 # include "../includes/Client.hpp"
 
 class Channel
@@ -57,6 +58,8 @@ class Channel
 		void			removeMember(std::string nickname);
 		void			removeBanned(Client &client);
 		void			removeInvited(Client &client);
+		void			removeMemberOldSort(Client &client);
+		void			removeOperatorOldSort(Client &client);
 
 		bool			isOperator(const Client& client) const;
 		bool			isOperator(std::string nickname) const;
@@ -67,27 +70,29 @@ class Channel
 		bool			isBanned(const Client& client) const;
 		bool			isBanned(std::string nickname) const;
 		bool			isInvited(const Client& client) const;
-		std::string			memberList() const;
+		std::string		memberList() const;
 		void			bannedList() const;
 		void			invitedList() const;
 		bool			isPasswordProtected() const;
 		void			sendMessageToMembers(const std::string &message) const;
 
 	private:
-		std::string					_channelName;
-		std::string					_topic;
-		std::string					_password;
-		unsigned int				_limit;
-		std::map<int, Client*>		_members;
-		std::map<int, Client*>		_creator;
-		std::map<int, Client*>		_operators;
-		std::map<int, Client*>		_banned;
-		std::set<int>				_invited;
-		bool						_inviteMode;// MODE #canal +i (true) or -i (false)
-		bool						_limitMode;// MODE +l (true) or -l (false)
-		bool						_operatorMode;// MODE +o (true) or -o (false)
-		bool						_passwordMode;// MODE +k (true) or -k (false)
-		bool						_topicMode;// MODE +t (true) or -t (false)
+		std::string				_channelName;
+		std::string				_topic;
+		std::string				_password;
+		unsigned int			_limit;
+		std::map<int, Client*>	_members;
+		std::map<int, Client*>	_creator;
+		std::map<int, Client*>	_operators;
+		std::map<int, Client*>	_banned;
+		std::set<int>			_invited;
+		std::vector<Client*>	_membersOldSort;
+		std::vector<Client*>	_operatorOldSort;
+		bool					_inviteMode;// MODE #canal +i (true) or -i (false)
+		bool					_limitMode;// MODE +l (true) or -l (false)
+		bool					_operatorMode;// MODE +o (true) or -o (false)
+		bool					_passwordMode;// MODE +k (true) or -k (false)
+		bool					_topicMode;// MODE +t (true) or -t (false)
 };
 
 #endif
